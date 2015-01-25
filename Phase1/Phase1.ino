@@ -1,3 +1,5 @@
+#include <ServoT4.h>
+
 #define BUFFER_SIZE 10
 #define SWITCH_PIN 4
 
@@ -5,6 +7,8 @@ volatile int mNumSendBits = 0;
 volatile int mBitBuffer[BUFFER_SIZE];
 volatile byte mBytes[] = {B01000001, B01000010, B01000011, B01000100}; // A, B, C, D
 volatile int mByteIndex = 0;
+
+ServoT4 mServo;
 
 // Takes a byte and sets the bit buffer 
 void setBitBuffer(byte pByte)
@@ -19,7 +23,7 @@ void setBitBuffer(byte pByte)
 
 void setup()
 {  
-  Serial.begin(9600);
+  //Serial.begin(9600);
   
   // Sets data direction for pin 13 to output (i.e. makes OC1C value visible)
   // We could use digital pins 11, 12, or 13 because these are the pins where timer 1 can generate a waveform
@@ -30,6 +34,9 @@ void setup()
   
   // Enables pull-up resistors on switch stick
   digitalWrite(SWITCH_PIN, HIGH); 
+  
+  
+  mServo.attach(9);
   
   // ======== Set up timer 3 to be the 500 us counter
   // Clear timer config.
@@ -86,14 +93,20 @@ ISR(TIMER3_COMPA_vect)
 }
 
 void loop() 
-{ 
+{     
+
+  int stickPos = analogRead(A0);
+  stickPos = map(stickPos, 0, 1023, 0, 180);
+  mServo.write(stickPos);
+  
   if(digitalRead(SWITCH_PIN) == LOW)
   {
      if(mNumSendBits == 0)
     {
       setBitBuffer(mBytes[mByteIndex]);
-      mNumSendBits = 10;
-      mByteIndex++;
+      mNumSendBits = BUFFER_SIZE;
+      mByteIndex = mByteIndex == 3 ? 0 : mByteIndex + 1;
+      
     }
     
     while(digitalRead(SWITCH_PIN) == LOW)
