@@ -23,8 +23,6 @@ void setBitBuffer(byte pByte)
 
 void setup()
 {  
-  //Serial.begin(9600);
-  
   // Sets data direction for pin 13 to output (i.e. makes OC1C value visible)
   // We could use digital pins 11, 12, or 13 because these are the pins where timer 1 can generate a waveform
   pinMode(13, OUTPUT);
