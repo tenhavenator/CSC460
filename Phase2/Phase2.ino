@@ -6,7 +6,6 @@
 #define STICK_YPIN 1
 #define SWITCH_PIN 7
 
-#define SWITCH_PIN 4
 #define RADIO_POWER_PIN 47
 
 uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
@@ -20,7 +19,7 @@ void radio_sendPacket()
   // Create packet based on stick state and sendS
 }
 
-void stick_poll(uint32_t idle_period)
+void idle(uint32_t idle_period)
 {
   uint32_t start = millis();
   
@@ -54,12 +53,6 @@ void setup()
   Radio_Init();
   Radio_Configure_Rx(RADIO_PIPE_0, recv_addr , ENABLE);
   Radio_Configure(RADIO_2MBPS, RADIO_HIGHEST_POWER);
-  Radio_Set_Tx_Addr(send_addr); // Think this can be be here
-  
-  // Load return addresses into packet
-  memcpy(packet.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
-  memcpy(packet.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
-  
 }
 
 void radio_rxhandler(uint8_t pipenumber)
@@ -69,24 +62,29 @@ void radio_rxhandler(uint8_t pipenumber)
 
 void loop()
 {
-  
-  
   uint32_t idle_period = Scheduler_Dispatch();
-<<<<<<< HEAD
   idle(idle_period);
   
   /*packet.type = COMMAND;
   memcpy(packet.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
   memcpy(packet.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
-=======
-  stick_poll(idle_period);
-  
-  packet.type = COMMAND;
->>>>>>> fdf41360862e062929e45a46b54a56102a9d698e
   packet.payload.command.command = 137;
   packet.payload.command.num_arg_bytes = 4;
   packet.payload.command.arguments[0] = 0;
   packet.payload.command.arguments[1] = 200;
   packet.payload.command.arguments[2] = 128;
-  packet.payload.command.arguments[3] = 0;*/
+  packet.payload.command.arguments[3] = 0;
+  
+  Radio_Set_Tx_Addr(send_addr);
+  
+  Radio_Transmit(&packet, RADIO_WAIT_FOR_TX);
+  
+  if (rxflag)
+  {
+    if (Radio_Receive(&packet) != RADIO_RX_MORE_PACKETS)
+    {
+      rxflag = 0;
+    }
+  }  
+  */
 }
