@@ -11,10 +11,10 @@
 uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
 uint8_t recv_addr[] = { 0xAA, 0xAB, 0xAC, 0xAD, 0xAE };
 
-int velocity_high[] = {0, 0, 0, 0, 0, 0, 0};
-int velocity_low[] = {0, 0, 0, 0, 0, 0, 0};
-int radius_high[] = {0, 0, 0, 0, 0, 0, 0};
-int radius_low[] = {0, 0, 0, 0, 0, 0, 0};
+uint8_t velocity_high[] = {0, 0, 0, 0, 255, 255, 255};
+iuint8_tnt velocity_low[] = {200, 100, 50, 0, 206, 156, 56};
+uint8_t radius_high[] = {0, 1, 3, 128, 252, 254, 255};
+uint8_t radius_low[] = {1, 244, 232, 0, 24, 12, 255};
 
 STICK_STATE mState;
 volatile uint8_t rxflag = 0;
