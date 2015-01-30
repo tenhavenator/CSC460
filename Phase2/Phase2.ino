@@ -12,7 +12,7 @@ uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
 uint8_t recv_addr[] = { 0xAA, 0xAB, 0xAC, 0xAD, 0xAE };
 
 uint8_t velocity_high[] = {0, 0, 0, 0, 255, 255, 255};
-iuint8_tnt velocity_low[] = {200, 100, 50, 0, 206, 156, 56};
+uint8_t velocity_low[] = {200, 100, 50, 0, 206, 156, 56};
 uint8_t radius_high[] = {0, 1, 3, 128, 252, 254, 255};
 uint8_t radius_low[] = {1, 244, 232, 0, 24, 12, 255};
 
@@ -20,7 +20,7 @@ STICK_STATE mState;
 volatile uint8_t rxflag = 0;
 radiopacket_t packet;
 
-radiopacket_t radio_createPacket(uint8_t type, uint8_t speed, uint8_t radius, uint8_t data_byte)
+radiopacket_t radio_createPacket(uint8_t type, uint8_t speed_s, uint8_t radius, uint8_t data_byte)
 {
   radiopacket_t pkt;
   pkt.type = type;
@@ -31,10 +31,10 @@ radiopacket_t radio_createPacket(uint8_t type, uint8_t speed, uint8_t radius, ui
   {
 	pkt.payload.command.command = 137;
 	pkt.payload.command.num_arg_bytes = 4;
-	pkt.payload.command.arguments[0] = velocity_high(speed);
-	pkt.payload.command.arguments[1] = velocity_low(speed);
-	pkt.payload.command.arguments[2] = radius_high(radius);
-	pkt.payload.command.arguments[3] = radius_low(radius);
+	pkt.payload.command.arguments[0] = velocity_high[speed_s];
+	pkt.payload.command.arguments[1] = velocity_low[speed_s];
+	pkt.payload.command.arguments[2] = radius_high[radius];
+	pkt.payload.command.arguments[3] = radius_low[radius];
   }
   else if (type == IR_COMMAND) 
   {
