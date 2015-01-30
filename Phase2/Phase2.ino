@@ -16,6 +16,7 @@ int velocity_low[] = {0, 0, 0, 0, 0, 0, 0};
 int radius_high[] = {0, 0, 0, 0, 0, 0, 0};
 int radius_low[] = {0, 0, 0, 0, 0, 0, 0};
 
+STICK_STATE mState;
 volatile uint8_t rxflag = 0;
 radiopacket_t packet;
 
@@ -52,13 +53,12 @@ void radio_sendPacket()
 
 void idle(uint32_t idle_period)
 {
-  uint32_t start = millis();
-  
-  while(millis() - start < idle_period)
-  {
-    STICK_STATE state = Stick_State_Current();
-    // Do things with this information
-  }
+  delay(idle_period);
+}
+
+void poll_stick()
+{
+  mState = Stick_State_Current();
 }
 
 void setup()
@@ -78,7 +78,8 @@ void setup()
   
   // Configure scheduler
   Scheduler_Init();
-  Scheduler_StartTask(0, 100, radio_sendPacket);
+  Scheduler_StartTask(0, 100, poll_stick);
+  Scheduler_StartTask(50, 100, radio_sendPacket);
  
   // Configure Radio
   Radio_Init();
