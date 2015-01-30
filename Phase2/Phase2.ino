@@ -6,8 +6,12 @@
 #define STICK_YPIN 1
 #define SWITCH_PIN 7
 
+#define SWITCH_PIN 4
+#define RADIO_POWER_PIN 47
+
 uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
 uint8_t recv_addr[] = { 0xAA, 0xAB, 0xAC, 0xAD, 0xAE };
+
 volatile uint8_t rxflag = 0;
 radiopacket_t packet;
 
@@ -16,7 +20,7 @@ void radio_sendPacket()
   // Create packet based on stick state and sendS
 }
 
-void idle(uint32_t idle_period)
+void stick_poll(uint32_t idle_period)
 {
   uint32_t start = millis();
   
@@ -25,18 +29,18 @@ void idle(uint32_t idle_period)
     STICK_STATE state = Stick_State_Current();
     // Do things with this information
   }
-  
 }
 
 void setup()
 {
   Serial.begin(9600);
+  
   pinMode(13, OUTPUT);
-  pinMode(47, OUTPUT);
+  pinMode(RADIO_POWER_PIN, OUTPUT);
  
-  digitalWrite(47, LOW); 
+  digitalWrite(RADIO_POWER_PIN, LOW); 
   delay(100);
-  digitalWrite(47, HIGH);
+  digitalWrite(RADIO_POWER_PIN, HIGH);
   delay(100);
   
   // Configure Stick
@@ -45,7 +49,7 @@ void setup()
   // Configure scheduler
   Scheduler_Init();
   Scheduler_StartTask(0, 100, radio_sendPacket);
-  
+ 
   // Configure Radio
   Radio_Init();
   Radio_Configure_Rx(RADIO_PIPE_0, recv_addr , ENABLE);
@@ -65,12 +69,20 @@ void radio_rxhandler(uint8_t pipenumber)
 
 void loop()
 {
+  
+  
   uint32_t idle_period = Scheduler_Dispatch();
+<<<<<<< HEAD
   idle(idle_period);
   
   /*packet.type = COMMAND;
   memcpy(packet.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
   memcpy(packet.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
+=======
+  stick_poll(idle_period);
+  
+  packet.type = COMMAND;
+>>>>>>> fdf41360862e062929e45a46b54a56102a9d698e
   packet.payload.command.command = 137;
   packet.payload.command.num_arg_bytes = 4;
   packet.payload.command.arguments[0] = 0;

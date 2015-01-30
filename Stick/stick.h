@@ -12,6 +12,10 @@
 #ifndef STICK_H_
 #define STICK_H_
 
+#define SLOW_SPEED_THRES 128
+#define NORMAL_SPEED_THRES 256
+#define FAST_SPEED_THRES 384
+
 typedef enum _speed
 {
 	FAST,
@@ -25,13 +29,13 @@ typedef enum _speed
 
 typedef enum _radius
 {
-	LOW_L,
+	NONE_L,
 	MED_L,
 	HIGH_L,
-	NONE,
+	MAX,
 	HIGH_R,
 	MED_R,
-	LOW_R,
+	NONE_R,
 } RADIUS;
 
 typedef enum _switch
@@ -45,7 +49,7 @@ typedef struct _state
 {
 	RADIUS radius_s;
 	SPEED speed_s;
-	SWITCH button_s;
+	SWITCH switch_s;
 
 } STICK_STATE;
 
