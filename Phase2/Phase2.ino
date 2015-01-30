@@ -11,8 +11,39 @@
 uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
 uint8_t recv_addr[] = { 0xAA, 0xAB, 0xAC, 0xAD, 0xAE };
 
+int velocity_high[] = {0, 0, 0, 0, 0, 0, 0};
+int velocity_low[] = {0, 0, 0, 0, 0, 0, 0};
+int radius_high[] = {0, 0, 0, 0, 0, 0, 0};
+int radius_low[] = {0, 0, 0, 0, 0, 0, 0};
+
 volatile uint8_t rxflag = 0;
 radiopacket_t packet;
+
+radiopacket_t radio_createPacket(uint8_t type, uint8_t speed, uint8_t radius, uint8_t data_byte)
+{
+  radiopacket_t pkt;
+  pkt.type = type;
+  memcpy(pkt.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
+  memcpy(pkt.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
+  
+  if (type == COMMAND) 
+  {
+	pkt.payload.command.command = 137;
+	pkt.payload.command.num_arg_bytes = 4;
+	pkt.payload.command.arguments[0] = velocity_high(speed);
+	pkt.payload.command.arguments[1] = velocity_low(speed);
+	pkt.payload.command.arguments[2] = radius_high(radius);
+	pkt.payload.command.arguments[3] = radius_low(radius);
+  }
+  else if (type == IR_COMMAND) 
+  {
+	pkt.payload.ir_command.ir_command = SEND_BYTE;
+	pkt.payload.ir_command.ir_data = data_byte;
+	pkt.payload.ir_command.servo_angle = 0;
+  }
+  
+  return pkt;
+}
 
 void radio_sendPacket()
 {
@@ -65,17 +96,7 @@ void loop()
   uint32_t idle_period = Scheduler_Dispatch();
   idle(idle_period);
   
-  /*packet.type = COMMAND;
-  memcpy(packet.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
-  memcpy(packet.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
-  packet.payload.command.command = 137;
-  packet.payload.command.num_arg_bytes = 4;
-  packet.payload.command.arguments[0] = 0;
-  packet.payload.command.arguments[1] = 200;
-  packet.payload.command.arguments[2] = 128;
-  packet.payload.command.arguments[3] = 0;
-  
-  Radio_Set_Tx_Addr(send_addr);
+  /*
   
   Radio_Transmit(&packet, RADIO_WAIT_FOR_TX);
   
