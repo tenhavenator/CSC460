@@ -4,6 +4,9 @@
 *  Created on: 17-Feb-2011
 *      Author: nrqm
 *      Based on code by Jacob Schwartz
+*
+*
+*  Downloaded from Neil's blog on January 28th.
 */
 #include "scheduler.h"
 

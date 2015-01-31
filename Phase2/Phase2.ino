@@ -18,13 +18,11 @@ uint8_t radius_low[] = {1, 244, 232, 0, 24, 12, 255};
 
 STICK_STATE mState;
 volatile uint8_t rxflag = 0;
-radiopacket_t packet;
 
 radiopacket_t radio_createPacket(uint8_t type, uint8_t speed_s, uint8_t radius, uint8_t data_byte)
 {
   radiopacket_t pkt;
   pkt.type = type;
-  memcpy(pkt.payload.message.address, recv_addr, RADIO_ADDRESS_LENGTH);
   memcpy(pkt.payload.command.sender_address, recv_addr, RADIO_ADDRESS_LENGTH);
   
   if (type == COMMAND) 
@@ -46,25 +44,43 @@ radiopacket_t radio_createPacket(uint8_t type, uint8_t speed_s, uint8_t radius, 
   return pkt;
 }
 
+/*
+ * Periodic task to send a radio packet based on the desired state of the Roomba
+ */
 void radio_sendPacket()
 {
-  // Create packet based on stick state and sendS
+  radiopacket_t command_packet = radio_createPacket(COMMAND, mState.speed_s, mState.radius_s, 0);
+  Radio_Set_Tx_Addr(send_addr);
+  Radio_Transmit(&command_packet, RADIO_RETURN_ON_TX);
+  
+  if(mState.switch_s)
+  {
+    radiopacket_t ir_packet = radio_createPacket(IR_COMMAND, mState.speed_s, mState.radius_s, 65);
+    Radio_Set_Tx_Addr(send_addr);
+    Radio_Transmit(&ir_packet, RADIO_RETURN_ON_TX);
+  }
 }
 
+/*
+ * Periodic task to send a radio packet based on the desired state of the Roomba
+ */
+void poll_stick()
+{
+  mState = Stick_State_Current();  
+}
+
+/*
+ * The idle task for the TTA scheduler.
+ */
 void idle(uint32_t idle_period)
 {
   delay(idle_period);
 }
 
-void poll_stick()
-{
-  mState = Stick_State_Current();
-}
+
 
 void setup()
-{
-  Serial.begin(9600);
-  
+{  
   pinMode(13, OUTPUT);
   pinMode(RADIO_POWER_PIN, OUTPUT);
  
@@ -78,8 +94,8 @@ void setup()
   
   // Configure scheduler
   Scheduler_Init();
-  Scheduler_StartTask(0, 100, poll_stick);
-  Scheduler_StartTask(50, 100, radio_sendPacket);
+  Scheduler_StartTask(0, 300, poll_stick);
+  Scheduler_StartTask(5, 50, radio_sendPacket);
  
   // Configure Radio
   Radio_Init();
@@ -94,19 +110,7 @@ void radio_rxhandler(uint8_t pipenumber)
 
 void loop()
 {
+  // Dispatch a scheduled event 
   uint32_t idle_period = Scheduler_Dispatch();
   idle(idle_period);
-  
-  /*
-  
-  Radio_Transmit(&packet, RADIO_WAIT_FOR_TX);
-  
-  if (rxflag)
-  {
-    if (Radio_Receive(&packet) != RADIO_RX_MORE_PACKETS)
-    {
-      rxflag = 0;
-    }
-  }  
-  */
 }
