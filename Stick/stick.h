@@ -40,9 +40,8 @@ typedef enum _radius
 
 typedef enum _switch
 {
-	PRESSED,
-	NOT_PRESSED
-
+	NOT_PRESSED,
+	PRESSED
 } SWITCH;
 
 typedef struct _state

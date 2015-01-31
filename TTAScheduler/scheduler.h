@@ -4,7 +4,8 @@
 *  Created on: 17-Feb-2011
 *      Author: nrqm
 *
-* Downloaded from Neil's blog on January 28th.
+*
+*  Downloaded from Neil's blog on January 28th.
 */
 
 #ifndef SCHEDULER_H_
