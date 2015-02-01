@@ -8,6 +8,8 @@
 
 #define RADIO_POWER_PIN 47
 
+#define CHANNEL 104
+
 uint8_t send_addr[] = {0xAA,0xAA,0xAA,0xAA,0xAA};
 uint8_t recv_addr[] = { 0xAA, 0xAB, 0xAC, 0xAD, 0xAE };
 
@@ -50,13 +52,13 @@ radiopacket_t radio_createPacket(uint8_t type, uint8_t speed_s, uint8_t radius, 
 void radio_sendPacket()
 {
   radiopacket_t command_packet = radio_createPacket(COMMAND, mState.speed_s, mState.radius_s, 0);
-  Radio_Set_Tx_Addr(send_addr);
+  Radio_Set_Tx_Addr(send_addr, CHANNEL);
   Radio_Transmit(&command_packet, RADIO_RETURN_ON_TX);
   
   if(mState.switch_s)
   {
     radiopacket_t ir_packet = radio_createPacket(IR_COMMAND, mState.speed_s, mState.radius_s, 65);
-    Radio_Set_Tx_Addr(send_addr);
+    Radio_Set_Tx_Addr(send_addr, CHANNEL);
     Radio_Transmit(&ir_packet, RADIO_RETURN_ON_TX);
   }
 }
