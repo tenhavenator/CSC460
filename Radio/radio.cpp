@@ -14,8 +14,6 @@
 #define DEBUG_INIT		DDRH |= _BV(PH3) | _BV(PH4)
 
 // non-public constants and macros
-
-#define CHANNEL 104
 #define ADDRESS_LENGTH 5
 
 // Pin definitions for chip select and chip enable on the radio module
@@ -202,10 +200,6 @@ static void configure_registers()
 	//value = 0x10;
 	set_register(SETUP_RETR, &value, 1);
 
-	// Set to use 2.4 GHz channel 110.
-	value = CHANNEL;
-	set_register(RF_CH, &value, 1);
-
 	// Set radio to 2 Mbps and high power.  Leave LNA_HCURR at its default.
 	value = _BV(RF_DR) | _BV(LNA_HCURR);
 	set_register(RF_SETUP, &value, 1);
@@ -312,7 +306,7 @@ void Radio_Configure_Rx(RADIO_PIPE pipe, uint8_t* address, ON_OFF enable)
 }
 
 // default transmitter address is 0xe7e7e7e7e7.
-void Radio_Set_Tx_Addr(uint8_t* address)
+void Radio_Set_Tx_Addr(uint8_t* address, uint8_t channel)
 {
 	tx_address[0] = address[0];
 	tx_address[1] = address[1];
@@ -320,6 +314,9 @@ void Radio_Set_Tx_Addr(uint8_t* address)
 	tx_address[3] = address[3];
 	tx_address[4] = address[4];
 	set_register(TX_ADDR, address, ADDRESS_LENGTH);
+
+	// Set the channel
+	set_register(RF_CH, &channel, 1);
 }
 
 void Radio_Configure(RADIO_DATA_RATE dr, RADIO_TX_POWER power)

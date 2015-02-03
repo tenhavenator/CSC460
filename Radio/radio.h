@@ -121,7 +121,7 @@ void Radio_Configure(RADIO_DATA_RATE dr, RADIO_TX_POWER power);
  * Set the radio transmitter's address.
  * \param The 5-byte address that packets will be sent to.
  */
-void Radio_Set_Tx_Addr(uint8_t* address);
+void Radio_Set_Tx_Addr(uint8_t* address, uint8_t channel);
 
 /**
  * Transmit some data to another station.
