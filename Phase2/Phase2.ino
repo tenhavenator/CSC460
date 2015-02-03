@@ -52,13 +52,12 @@ radiopacket_t radio_createPacket(uint8_t type, uint8_t speed_s, uint8_t radius, 
 void radio_sendPacket()
 {
   radiopacket_t command_packet = radio_createPacket(COMMAND, mState.speed_s, mState.radius_s, 0);
-  Radio_Set_Tx_Addr(send_addr, CHANNEL);
   Radio_Transmit(&command_packet, RADIO_RETURN_ON_TX);
   
   if(mState.switch_s)
   {
-    radiopacket_t ir_packet = radio_createPacket(IR_COMMAND, mState.speed_s, mState.radius_s, 65);
-    Radio_Set_Tx_Addr(send_addr, CHANNEL);
+    delay(5);
+    radiopacket_t ir_packet = radio_createPacket(IR_COMMAND, mState.speed_s, mState.radius_s, 'A');
     Radio_Transmit(&ir_packet, RADIO_RETURN_ON_TX);
   }
 }
@@ -78,8 +77,6 @@ void idle(uint32_t idle_period)
 {
   delay(idle_period);
 }
-
-
 
 void setup()
 {  
@@ -103,6 +100,7 @@ void setup()
   Radio_Init();
   Radio_Configure_Rx(RADIO_PIPE_0, recv_addr , ENABLE);
   Radio_Configure(RADIO_2MBPS, RADIO_HIGHEST_POWER);
+  Radio_Set_Tx_Addr(send_addr, CHANNEL);
 }
 
 void radio_rxhandler(uint8_t pipenumber)
