@@ -308,6 +308,8 @@ static void kernel_handle_request(void)
 
 #define    SAVE_CTX_BOTTOM()       asm volatile (\
     "push   r31             \n\t"\
+	"in     r31, 0x3C       \n\t"\
+	"push   r31             \n\t"\
     "push   r30             \n\t"\
     "push   r29             \n\t"\
     "push   r28             \n\t"\
@@ -380,6 +382,8 @@ static void kernel_handle_request(void)
     "pop    r28             \n\t"\
     "pop    r29             \n\t"\
     "pop    r30             \n\t"\
+	"pop    r31             \n\t"\
+	"out    0x3C, r31       \n\t"\
     "pop    r31             \n\t"\
 	"out    __SREG__, r31    \n\t"\
     "pop    r31             \n\t"::);
@@ -896,6 +900,10 @@ void OS_Init()
     /*
      * The main loop of the RTOS kernel.
      */
+	
+	DDRD = _BV(PD7);
+	PORTD = _BV(PD7);
+	
     kernel_main_loop();
 }
 

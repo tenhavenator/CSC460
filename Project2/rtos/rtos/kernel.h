@@ -23,10 +23,6 @@ extern "C" {
 #define Disable_Interrupt()     asm volatile ("cli"::)
 #define Enable_Interrupt()     asm volatile ("sei"::)
 
-#ifndef F_CPU 
-#define F_CPU   16000000UL
-#endif
-
 /** The maximum number of names. Currently the same as the number of tasks. */
 #define 	MAXNAME		MAXPROCESS
 

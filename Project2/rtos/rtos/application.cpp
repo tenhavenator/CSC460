@@ -9,5 +9,6 @@ extern const unsigned char PPP[] = {};
 
 int r_main(void)
 {
+	while(true){}
 	return 0;
 }
