@@ -32,11 +32,11 @@ extern "C" {
 /** The number of clock cycles in one "tick" or 5 ms */
 #define TICK_CYCLES     (((F_CPU / TIMER_PRESCALER) / 1000) * TICK)
 
-/** LEDs for OS_Abort() */
-#define LED_RED_MASK    (uint8_t)(_BV(4) | _BV(7))
+/** LEDs for OS_Abort() Arduino Pin 43*/
+#define LED_RED_MASK    (uint8_t)_BV(6)
 
-/** LEDs for OS_Abort() */
-#define LED_GREEN_MASK    (uint8_t)(_BV(5) | _BV(6))
+/** LEDs for OS_Abort() Adruino Pin 42 */
+#define LED_GREEN_MASK    (uint8_t)_BV(7)
 
 
 /* Typedefs and data structures. */

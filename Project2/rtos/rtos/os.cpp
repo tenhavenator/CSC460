@@ -932,9 +932,6 @@ void OS_Abort(void)
 
     Disable_Interrupt();
 
-    /* Initialize port for output */
-    DDRD = LED_RED_MASK | LED_GREEN_MASK;
-
     if(error_msg < ERR_RUN_1_USER_CALLED_OS_ABORT)
     {
         flashes = error_msg + 1;
@@ -946,17 +943,19 @@ void OS_Abort(void)
         mask = LED_RED_MASK;
     }
 
+	/* Initialize port for output */
+	DDRL |= mask;
 
     for(;;)
     {
-        PORTD = (uint8_t)(LED_RED_MASK | LED_GREEN_MASK);
+        PORTL |= mask;
 
         for(i = 0; i < 100; ++i)
         {
                _delay_25ms();
         }
 
-        PORTD = (uint8_t) 0;
+        PORTL &= ~mask;
 
         for(i = 0; i < 40; ++i)
         {
@@ -966,14 +965,14 @@ void OS_Abort(void)
 
         for(j = 0; j < flashes; ++j)
         {
-            PORTD = mask;
+            PORTL |= mask;
 
             for(i = 0; i < 10; ++i)
             {
                 _delay_25ms();
             }
 
-            PORTD = (uint8_t) 0;
+            PORTL &= ~mask;
 
             for(i = 0; i < 10; ++i)
             {
