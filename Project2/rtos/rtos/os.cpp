@@ -300,7 +300,7 @@ static void kernel_handle_request(void)
  */
 #define    SAVE_CTX_TOP()       asm volatile (\
     "push   r31             \n\t"\
-    "in     r31,__SREG__    \n\t"\
+	"in     r31, __SREG__    \n\t"\
     "cli                    \n\t"::); /* Disable interrupt */
 
 #define STACK_SREG_SET_I_BIT()    asm volatile (\
@@ -308,7 +308,7 @@ static void kernel_handle_request(void)
 
 #define    SAVE_CTX_BOTTOM()       asm volatile (\
     "push   r31             \n\t"\
-	"in     r31, 0x3C       \n\t"\
+	"in     r31, 0x3c       \n\t"\
 	"push   r31             \n\t"\
     "push   r30             \n\t"\
     "push   r29             \n\t"\
@@ -383,9 +383,9 @@ static void kernel_handle_request(void)
     "pop    r29             \n\t"\
     "pop    r30             \n\t"\
 	"pop    r31             \n\t"\
-	"out    0x3C, r31       \n\t"\
+	"out    0x3c, r31       \n\t"\
     "pop    r31             \n\t"\
-	"out    __SREG__, r31    \n\t"\
+	"out    __SREG__, r31   \n\t"\
     "pop    r31             \n\t"::);
 
 
@@ -436,6 +436,7 @@ static void exit_kernel(void)
      * The last piece of the context, the PC, is popped off the stack
      * with the ret instruction.
      */
+	
     asm volatile ("ret\n"::);
 }
 
@@ -619,40 +620,45 @@ static int kernel_create_task()
     stack_bottom = &(p->stack[MAXSTACK-1]);
 
     /* The stack grows down in memory, so the stack pointer is going to end up
-     * pointing to the location 32 + 1 + 2 + 2 = 37 bytes above the bottom, to make
+     * pointing to the location 32 + 1 + 1 + 3 + 3 = 40 bytes above the bottom, to make
      * room for (from bottom to top):
      *   the address of Task_Terminate() to destroy the task if it ever returns,
      *   the address of the start of the task to "return" to the first time it runs,
      *   register 31,
-     *   the stored SREG, and
+     *   the stored SREG
+	 *	 the stored EIND 
      *   registers 30 to 0.
      */
-    uint8_t* stack_top = stack_bottom - (32 + 1 + 2 + 2);
+    uint8_t* stack_top = stack_bottom - (32 + 1 + 1 + 3 + 3);
 
-    /* Not necessary to clear the task descriptor. */
-    /* memset(p,0,sizeof(task_descriptor_t)); */
+    // stack_top[0] is the byte above the stack.
+    // stack_top[1] is r0. 
+    stack_top[2] = (uint8_t) 0; // r1 is the "zero" register. 
+    // stack_top[31] is r30. 
+	stack_top[32] = 0 ; // set the EIND register to initially be zero
+	stack_top[33] = (uint8_t) _BV(SREG_I); // set SREG_I bit in stored SREG. 
+    // stack_top[34] is r31.
 
-    /* stack_top[0] is the byte above the stack.
-     * stack_top[1] is r0. */
-    stack_top[2] = (uint8_t) 0; /* r1 is the "zero" register. */
-    /* stack_top[31] is r30. */
-    stack_top[32] = (uint8_t) _BV(SREG_I); /* set SREG_I bit in stored SREG. */
-    /* stack_top[33] is r31. */
-
-    /* We are placing the address (16-bit) of the functions
+    /* We are placing the address (24-bit) of the functions
      * onto the stack in reverse byte order (least significant first, followed
      * by most significant).  This is because the "return" assembly instructions
      * (ret and reti) pop addresses off in BIG ENDIAN (most sig. first, least sig.
      * second), even though the AT90 is LITTLE ENDIAN machine.
-     */
-    stack_top[34] = (uint8_t)((uint16_t)(kernel_request_create_args.f) >> 8);
-    stack_top[35] = (uint8_t)(uint16_t)(kernel_request_create_args.f);
-    stack_top[36] = (uint8_t)((uint16_t)Task_Terminate >> 8);
-    stack_top[37] = (uint8_t)(uint16_t)Task_Terminate;
+	 *
+     * Each function pointer now consists of an extra 8 bits due to an extra byte 
+	 * being needed to reference them. This is byte is initialized to zero.
+	 *
+	 */ 
+	stack_top[35] = (uint8_t)(0);
+    stack_top[36] = (uint8_t)((uint16_t)(kernel_request_create_args.f) >> 8);
+    stack_top[37] = (uint8_t)(uint16_t)(kernel_request_create_args.f);
+	stack_top[38] = (uint8_t)(0);
+    stack_top[39] = (uint8_t)((uint16_t)Task_Terminate >> 8);
+    stack_top[40] = (uint8_t)(uint16_t)Task_Terminate;
 
     /*
      * Make stack pointer point to cell above stack (the top).
-     * Make room for 32 registers, SREG and two return addresses.
+     * Make room for 32 registers, SREG, EIND,  and two return addresses.
      */
     p->sp = stack_top;
 
@@ -901,8 +907,7 @@ void OS_Init()
      * The main loop of the RTOS kernel.
      */
 	
-	DDRD = _BV(PD7);
-	PORTD = _BV(PD7);
+	// Why do this? Light up digital pin 50
 	
     kernel_main_loop();
 }
