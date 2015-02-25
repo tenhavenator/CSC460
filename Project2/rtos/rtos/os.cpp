@@ -300,7 +300,7 @@ static void kernel_handle_request(void)
  */
 #define    SAVE_CTX_TOP()       asm volatile (\
     "push   r31             \n\t"\
-	"in     r31, __SREG__    \n\t"\
+    "in     r31,__SREG__    \n\t"\
     "cli                    \n\t"::); /* Disable interrupt */
 
 #define STACK_SREG_SET_I_BIT()    asm volatile (\
@@ -308,8 +308,8 @@ static void kernel_handle_request(void)
 
 #define    SAVE_CTX_BOTTOM()       asm volatile (\
     "push   r31             \n\t"\
-	"in     r31, 0x3c       \n\t"\
-	"push   r31             \n\t"\
+    "in     r31, 0x3c       \n\t"\
+    "push   r31             \n\t"\
     "push   r30             \n\t"\
     "push   r29             \n\t"\
     "push   r28             \n\t"\
@@ -382,10 +382,10 @@ static void kernel_handle_request(void)
     "pop    r28             \n\t"\
     "pop    r29             \n\t"\
     "pop    r30             \n\t"\
-	"pop    r31             \n\t"\
-	"out    0x3c, r31       \n\t"\
     "pop    r31             \n\t"\
-	"out    __SREG__, r31   \n\t"\
+    "out    0x3c, r31       \n\t"\
+	"pop    r31             \n\t"\
+    "out    __SREG__, r31   \n\t"\
     "pop    r31             \n\t"::);
 
 
@@ -436,7 +436,6 @@ static void exit_kernel(void)
      * The last piece of the context, the PC, is popped off the stack
      * with the ret instruction.
      */
-	
     asm volatile ("ret\n"::);
 }
 
@@ -635,8 +634,8 @@ static int kernel_create_task()
     // stack_top[1] is r0. 
     stack_top[2] = (uint8_t) 0; // r1 is the "zero" register. 
     // stack_top[31] is r30. 
-	stack_top[32] = 0 ; // set the EIND register to initially be zero
-	stack_top[33] = (uint8_t) _BV(SREG_I); // set SREG_I bit in stored SREG. 
+    stack_top[32] = 0 ; // set the EIND register to initially be zero
+    stack_top[33] = (uint8_t) _BV(SREG_I); // set SREG_I bit in stored SREG. 
     // stack_top[34] is r31.
 
     /* We are placing the address (24-bit) of the functions
@@ -649,10 +648,10 @@ static int kernel_create_task()
 	 * being needed to reference them. This is byte is initialized to zero.
 	 *
 	 */ 
-	stack_top[35] = (uint8_t)(0);
+    stack_top[35] = (uint8_t)(0);
     stack_top[36] = (uint8_t)((uint16_t)(kernel_request_create_args.f) >> 8);
     stack_top[37] = (uint8_t)(uint16_t)(kernel_request_create_args.f);
-	stack_top[38] = (uint8_t)(0);
+    stack_top[38] = (uint8_t)(0);
     stack_top[39] = (uint8_t)((uint16_t)Task_Terminate >> 8);
     stack_top[40] = (uint8_t)(uint16_t)Task_Terminate;
 
@@ -906,9 +905,6 @@ void OS_Init()
     /*
      * The main loop of the RTOS kernel.
      */
-	
-	// Why do this? Light up digital pin 50
-	
     kernel_main_loop();
 }
 
