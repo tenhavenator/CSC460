@@ -33,7 +33,7 @@ extern "C" {
 #define TICK_CYCLES     (((F_CPU / TIMER_PRESCALER) / 1000) * TICK)
 
 // Number of clock cycles in 1 ms
-#define ONEMS_CYCLES    ((F_CPU / TIMER_PRESCALER) / 1000)
+#define MS_CYCLES    ((F_CPU / TIMER_PRESCALER) / 1000)
 
 /** LEDs for OS_Abort() Arduino Pin 43*/
 #define LED_RED_MASK    (uint8_t)_BV(6)
