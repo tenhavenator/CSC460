@@ -10,14 +10,26 @@ extern const unsigned char PPP[] = {IDLE, 10};
 
 int r_main(void)
 {    
-		DDRB =_BV(7);
-	    
-		for(;;){
-			PORTB = 0;
-			_delay_ms(1000);
+	DDRB =_BV(7);
+	
+	uint16_t time = Now();
+	
+	for(;;)
+	{	
+		if(Now() - time > 10000)
+		{
 			PORTB = _BV(7);
-			_delay_ms(1000);
+			if(Now() - time > 20000)
+			{
+				time = Now();
+			}
+			
 		}
-		
-		return 0;
+		else {
+			
+			PORTB = 0;
+		}				
+	}
+
+	return 0;
 }

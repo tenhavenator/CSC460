@@ -101,6 +101,8 @@ static void check_PPP_names(void);
 static void idle (void);
 static void _delay_25ms(void);
 
+uint16_t clock;
+
 /*
  * FUNCTIONS
  */
@@ -515,6 +517,8 @@ void TIMER1_COMPA_vect(void)
     STACK_SREG_SET_I_BIT();
 
     SAVE_CTX_BOTTOM();
+	
+	clock += 5;
 
     cur_task->sp = (uint8_t*)SP;
 
@@ -852,6 +856,7 @@ void OS_Init()
 
     /* Set up the clocks */
 
+	// Pre-scalar set to 8 
     TCCR1B |= (_BV(CS11));
 
 #ifdef SLOW_CLOCK
@@ -897,11 +902,13 @@ void OS_Init()
     }
 
     /* Set up Timer 1 Output Compare interrupt,the TICK clock. */
+	// 
     TIMSK1 |= _BV(OCIE1A);
     OCR1A = TCNT1 + TICK_CYCLES;
     /* Clear flag. */
     TIFR1 = _BV(OCF1A);
 
+    clock = 0;
     /*
      * The main loop of the RTOS kernel.
      */
@@ -1078,6 +1085,13 @@ int Task_GetArg(void)
     SREG = sreg;
 
     return arg;
+}
+
+// 
+uint16_t Now()
+{
+	uint16_t now = clock + (uint16_t) ((OCR1A - TCNT1) / MS_CYCLES);
+	return now;	
 }
 
 /**
