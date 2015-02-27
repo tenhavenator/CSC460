@@ -150,8 +150,8 @@ typedef struct
     task_descriptor_t*  head;
     /** The last item in the queue. Undefined if the queue is empty. */
     task_descriptor_t*  tail;
-	// The size of the queue 
-	uint8_t size;
+    // The size of the queue 
+    uint8_t size;
 }
 queue_t;
 
