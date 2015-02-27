@@ -2,34 +2,41 @@
 * Skeleton application containing definitions needed for compiling the OS
 */
 #include "os.h"
+
 #include <avr/io.h>
 #include <util/delay.h>
 
 extern const unsigned int PT = 1;
 extern const unsigned char PPP[] = {IDLE, 10};
 
-int r_main(void)
-{    
-	DDRB =_BV(7);
-	
-	uint16_t time = Now();
-	
-	for(;;)
-	{	
-		if(Now() - time > 10000)
-		{
-			PORTB = _BV(7);
-			if(Now() - time > 20000)
-			{
-				time = Now();
-			}
-			
-		}
-		else {
-			
-			PORTB = 0;
-		}				
-	}
+extern int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name);
 
-	return 0;
+
+SERVICE * serv;
+
+void rr_task()
+{
+	_delay_ms(5000);
+	Service_Publish(serv, 4);
+}
+
+int r_main(void)
+{    	
+	Task_Create(rr_task, 0, RR, 1);
+	
+    serv = Service_Init();
+	
+	int retval;
+	Service_Subscribe(serv, &retval);
+		
+	DDRB = _BV(7);
+	int i;
+	for(i = 0; i < retval; i++)
+	{
+		PORTB = _BV(7);
+		_delay_ms(1000);
+		PORTB = 0;
+		_delay_ms(1000);
+	}
+	
 }

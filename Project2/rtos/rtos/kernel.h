@@ -35,6 +35,12 @@ extern "C" {
 // Number of clock cycles in 1 ms
 #define MS_CYCLES    ((F_CPU / TIMER_PRESCALER) / 1000)
 
+// Maximum number of services
+#define MAXSERVICE 10
+
+// Maximum number of subscribers a service can have
+#define MAXSUBSCRIBERS 10
+
 /** LEDs for OS_Abort() Arduino Pin 43*/
 #define LED_RED_MASK    (uint8_t)_BV(6)
 
@@ -69,6 +75,8 @@ typedef enum
     TASK_TERMINATE,
     TASK_NEXT,
     TASK_GET_ARG,
+	SUBSCRIBE,
+	PUBLISH, 
 }
 kernel_request_t;
 
@@ -89,8 +97,28 @@ typedef struct
 }
 create_args_t;
 
-
 typedef struct td_struct task_descriptor_t;
+
+/*
+ * All the data needed to describe a service.
+ */
+struct service {
+	uint8_t subscribers_count;
+	task_descriptor_t* subscribers[MAXSUBSCRIBERS];
+	int16_t* retvals[MAXSUBSCRIBERS];
+};
+
+/*
+ * All the data needed to subscribe to a service.
+ */
+typedef struct 
+{
+	SERVICE* service;
+	int16_t* retval;
+
+} service_args_t;
+
+
 /**
  * @brief All the data needed to describe the task, including its context.
  */
@@ -122,6 +150,8 @@ typedef struct
     task_descriptor_t*  head;
     /** The last item in the queue. Undefined if the queue is empty. */
     task_descriptor_t*  tail;
+	
+	uint8_t size;
 }
 queue_t;
 

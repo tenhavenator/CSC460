@@ -53,6 +53,13 @@ ERR_RUN_4_ILLEGAL_ISR_KERNEL_REQUEST,
 /** RTOS Internal error in handling request. */
 ERR_RUN_5_RTOS_INTERNAL_ERROR,
 
+// A periodic task tries to subscribe to a service
+ERR_RUN_6_PERIODIC_IPC_ERROR, 
+
+// Too many subscribers are already subscribed to a service
+ERR_RUN_7_TOO_MANY_SUBSCRIBERS,
+
+
 };
 
 
