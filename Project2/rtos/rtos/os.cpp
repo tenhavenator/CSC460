@@ -78,7 +78,6 @@ static uint8_t name_in_PPP[MAXNAME + 1];
 /** Error message used in OS_Abort() */
 static uint8_t volatile error_msg = ERR_RUN_1_USER_CALLED_OS_ABORT;
 
-
 /* Forward declarations */
 /* kernel */
 static void kernel_main_loop(void);
@@ -101,7 +100,14 @@ static void check_PPP_names(void);
 static void idle (void);
 static void _delay_25ms(void);
 
+
+// Might want to change these to static ?
 uint16_t clock;
+
+// Globals added for implementing services
+static uint8_t service_count;
+static SERVICE services[MAXSERVICE];
+static service_args_t kernel_request_service_args;
 
 /*
  * FUNCTIONS
@@ -158,31 +164,58 @@ static void kernel_dispatch(void)
 {
     /* If the current state is RUNNING, then select it to run again.
      * kernel_handle_request() has already determined it should be selected.
+	 * Do not select a task to run if it is in the WAITING state
      */
+	uint8_t i;
 
     if(cur_task->state != RUNNING || cur_task == idle_task)
     {
-		if(system_queue.head != NULL)
+        if(system_queue.head != NULL)
         {
-            cur_task = dequeue(&system_queue);
+            for(i = 0; i < system_queue.size; i++)
+            {
+			    task_descriptor_t* next_task = dequeue(&system_queue);
+                if(next_task->state == READY)
+                {
+                    cur_task = next_task;
+                    cur_task->state = RUNNING;
+                    return;
+                }
+                else
+                {
+                    enqueue(&system_queue, next_task);
+                }
+            }
         }
-        else if(!slot_task_finished && PT > 0 && name_to_task_ptr[PPP[slot_name_index]] != NULL)
+	
+        if(!slot_task_finished && PT > 0 && name_to_task_ptr[PPP[slot_name_index]] != NULL)
         {
             // Keep running the current PERIODIC task.
             cur_task = name_to_task_ptr[PPP[slot_name_index]];
+            cur_task->state = RUNNING;
+            return;
         } 
 		
-        else if(rr_queue.head != NULL)
+        if(rr_queue.head != NULL)
         {
-            cur_task = dequeue(&rr_queue);
-        }
-        else
-        {
-            /* No task available, so idle. */
-            cur_task = idle_task;
-        }
-
-        cur_task->state = RUNNING;
+	        for(i = 0; i < rr_queue.size; i++)
+	        {
+		        task_descriptor_t* next_task = dequeue(&rr_queue);
+		        if(next_task->state == READY)
+		        {
+			        cur_task = next_task;
+			        cur_task->state = RUNNING;
+			        return;
+		        }
+		        else
+		        {
+			        enqueue(&rr_queue, next_task);
+		        }
+	       }
+       }
+    
+       cur_task = idle_task;
+       cur_task->state = RUNNING;
     }
 }
 
@@ -277,6 +310,58 @@ static void kernel_handle_request(void)
         /* Should not happen. Handled in task itself. */
         break;
 		
+    case SUBSCRIBE:
+    {
+        SERVICE* serv = kernel_request_service_args.service;
+			
+        if(serv->subscribers_count >= MAXSUBSCRIBERS)
+        {
+            error_msg = ERR_RUN_7_TOO_MANY_SUBSCRIBERS;
+            OS_Abort();
+        }
+			
+        switch(cur_task->level)
+        {
+            case PERIODIC:
+                error_msg = ERR_RUN_6_PERIODIC_IPC_ERROR;
+                OS_Abort();
+					
+            case SYSTEM:
+                enqueue(&system_queue, cur_task);
+                break;
+
+            case RR:
+                enqueue(&rr_queue, cur_task);
+                break;
+				
+            default:
+                break;
+         }
+				
+         serv->retvals[serv->subscribers_count] = kernel_request_service_args.retval;
+         serv->subscribers[serv->subscribers_count] = cur_task;
+         serv->subscribers_count++;
+		   
+         cur_task->state = WAITING;  
+    }
+		
+        break;
+	
+      case PUBLISH:
+	  {
+           SERVICE* serv = kernel_request_service_args.service;
+           int i;
+           for(i = 0; i < serv->subscribers_count; i++)
+           {
+               *(serv->retvals[i]) = *(kernel_request_service_args.retval);
+               serv->subscribers[i]->state = READY;
+           }
+		   
+           serv->subscribers_count = 0;
+      }
+	    
+           break;
+
     default:
         /* Should never happen */
         error_msg = ERR_RUN_5_RTOS_INTERNAL_ERROR;
@@ -737,6 +822,8 @@ static void enqueue(queue_t* queue_ptr, task_descriptor_t* task_to_add)
         queue_ptr->tail->next = task_to_add;
         queue_ptr->tail = task_to_add;
     }
+	
+    queue_ptr->size++;
 }
 
 
@@ -755,6 +842,8 @@ static task_descriptor_t* dequeue(queue_t* queue_ptr)
         queue_ptr->head = queue_ptr->head->next;
         task_ptr->next = NULL;
     }
+	
+    queue_ptr->size--;
 
     return task_ptr;
 }
@@ -891,7 +980,7 @@ void OS_Init()
     kernel_create_task();
 
     /* First time through. Select "main" task to run first. */
-    cur_task = task_desc;
+    cur_task = &task_desc[0];
     cur_task->state = RUNNING;
     dequeue(&system_queue);
 
@@ -909,6 +998,7 @@ void OS_Init()
     TIFR1 = _BV(OCF1A);
 
     clock = 0;
+    service_count = 0;
     /*
      * The main loop of the RTOS kernel.
      */
@@ -1087,11 +1177,74 @@ int Task_GetArg(void)
     return arg;
 }
 
-// 
+// Should we disable interrupts in here like all the other functions?
 uint16_t Now()
 {
 	uint16_t now = clock + (uint16_t) ((OCR1A - TCNT1) / MS_CYCLES);
 	return now;	
+}
+
+/* 
+ * Initializes a new service
+ */
+SERVICE *Service_Init()
+{
+    // Should interrupts be disabled in here too?
+    uint8_t sreg;
+
+    sreg = SREG;
+    Disable_Interrupt();
+
+    if(service_count >= MAXSERVICE)
+    {
+        // We could add an OS error here. 
+        return NULL;
+    }
+
+    services[service_count].subscribers_count = 0;
+    service_count ++;
+
+    SREG = sreg;	
+	
+    return &services[service_count - 1];
+}
+
+/* 
+ * Subscribe to a service
+ */
+void Service_Subscribe(SERVICE *s, int16_t *v)
+{
+    uint8_t sreg;
+
+    sreg = SREG;
+    Disable_Interrupt();
+
+    kernel_request_service_args.service = s;
+    kernel_request_service_args.retval = v;
+      
+    kernel_request = SUBSCRIBE;
+    enter_kernel();
+
+    SREG = sreg;
+}
+
+/*
+ * Publish a notification to a service
+ */
+void Service_Publish(SERVICE *s, int16_t v)
+{
+    uint8_t sreg;
+
+    sreg = SREG;
+    Disable_Interrupt();
+	
+    kernel_request_service_args.service = s;
+    kernel_request_service_args.retval = &v;
+	 
+    kernel_request = PUBLISH;
+    enter_kernel();
+
+    SREG = sreg;
 }
 
 /**
