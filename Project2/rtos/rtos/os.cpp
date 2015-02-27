@@ -164,7 +164,7 @@ static void kernel_dispatch(void)
 {
     /* If the current state is RUNNING, then select it to run again.
      * kernel_handle_request() has already determined it should be selected.
-	 * Do not select a task to run if it is in the WAITING state
+     * Do not select a task to run if it is in the WAITING state
      */
 	uint8_t i;
 
