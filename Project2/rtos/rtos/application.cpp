@@ -2,7 +2,6 @@
 * Skeleton application containing definitions needed for compiling the OS
 */
 #include "os.h"
-
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -39,4 +38,5 @@ int r_main(void)
 		_delay_ms(1000);
 	}
 	
+	return 0;
 }

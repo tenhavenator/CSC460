@@ -75,8 +75,8 @@ typedef enum
     TASK_TERMINATE,
     TASK_NEXT,
     TASK_GET_ARG,
-	SUBSCRIBE,
-	PUBLISH, 
+    SUBSCRIBE,
+    PUBLISH, 
 }
 kernel_request_t;
 
@@ -103,9 +103,9 @@ typedef struct td_struct task_descriptor_t;
  * All the data needed to describe a service.
  */
 struct service {
-	uint8_t subscribers_count;
-	task_descriptor_t* subscribers[MAXSUBSCRIBERS];
-	int16_t* retvals[MAXSUBSCRIBERS];
+    uint8_t subscribers_count;
+    task_descriptor_t* subscribers[MAXSUBSCRIBERS];
+    int16_t* retvals[MAXSUBSCRIBERS];
 };
 
 /*
@@ -113,8 +113,8 @@ struct service {
  */
 typedef struct 
 {
-	SERVICE* service;
-	int16_t* retval;
+    SERVICE* service;
+    int16_t* retval;
 
 } service_args_t;
 
@@ -150,7 +150,7 @@ typedef struct
     task_descriptor_t*  head;
     /** The last item in the queue. Undefined if the queue is empty. */
     task_descriptor_t*  tail;
-	
+	// The size of the queue 
 	uint8_t size;
 }
 queue_t;
