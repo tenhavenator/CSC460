@@ -5,11 +5,11 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-extern const unsigned int PT = 1;
-extern const unsigned char PPP[] = {IDLE, 10};
-
 extern int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name);
-
+extern int8_t   Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start);
+extern uint16_t clock;
+// for testing - please delete
+int i1 = 0;
 
 SERVICE * serv;
 
@@ -19,24 +19,60 @@ void rr_task()
 	Service_Publish(serv, 4);
 }
 
+void periodic_task()
+{
+	for (;;) 
+	{
+		i1++;
+		DDRB = _BV(7);
+		if ((i1 % 2) == 0) {
+			PORTB = _BV(7);	
+		}
+		else {
+			PORTB = 0;
+		}
+		
+		Task_Next();
+	}
+}
+
 int r_main(void)
 {    	
-	Task_Create(rr_task, 0, RR, 1);
+	//Task_Create(rr_task, 0, RR, 1);
 	
-    serv = Service_Init();
+    //serv = Service_Init();
 	
 	int retval;
-	Service_Subscribe(serv, &retval);
+	//Service_Subscribe(serv, &retval);
 		
-	DDRB = _BV(7);
-	int i;
+	//DDRB = _BV(7);
+	/*int i;
 	for(i = 0; i < retval; i++)
 	{
 		PORTB = _BV(7);
-		_delay_ms(1000);
+		_delay_ms(100);
 		PORTB = 0;
-		_delay_ms(1000);
+		_delay_ms(100);
+	}*/
+	
+	//_delay_ms(000);
+	
+	Task_Create_Periodic(periodic_task, 1, 50, 40, 500);
+	
+	Task_Create_Periodic(periodic_task, 1, 50, 40, 525);
+	
+	Task_Create_Periodic(periodic_task, 1, 50, 40, 565);
+	
+	/*
+	int i;
+	for(i = 0; i < 5; i++)
+	{
+		PORTB = _BV(7);
+		_delay_ms(100);
+		PORTB = 0;
+		_delay_ms(100);
 	}
+	*/
 	
 	return 0;
 }
