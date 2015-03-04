@@ -23,14 +23,21 @@ void periodic_task()
 {
 	for (;;) 
 	{
+		/*
 		i1++;
 		DDRB = _BV(7);
-		if ((i1 % 2) == 0) {
+		if ((clock % 200) >= 100) {
 			PORTB = _BV(7);	
 		}
 		else {
 			PORTB = 0;
 		}
+		*/
+		
+		PORTB = _BV(7);
+		_delay_ms(100);
+		PORTB = 0;
+		_delay_ms(100);
 		
 		Task_Next();
 	}
@@ -41,8 +48,8 @@ int r_main(void)
 	//Task_Create(rr_task, 0, RR, 1);
 	
     //serv = Service_Init();
+	//int retval;
 	
-	int retval;
 	//Service_Subscribe(serv, &retval);
 		
 	//DDRB = _BV(7);
@@ -57,11 +64,11 @@ int r_main(void)
 	
 	//_delay_ms(000);
 	
-	Task_Create_Periodic(periodic_task, 1, 50, 40, 500);
+	Task_Create_Periodic(periodic_task, 1, 256, 255, 50);
 	
-	Task_Create_Periodic(periodic_task, 1, 50, 40, 525);
+	//Task_Create_Periodic(periodic_task, 1, 50, 40, 525);
 	
-	Task_Create_Periodic(periodic_task, 1, 50, 40, 565);
+	//Task_Create_Periodic(periodic_task, 1, 50, 40, 565);
 	
 	/*
 	int i;

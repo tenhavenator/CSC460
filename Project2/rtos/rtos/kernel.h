@@ -93,11 +93,11 @@ typedef struct
     /** Priority of the new task: RR, PERIODIC, SYSTEM */
     uint8_t level;
 	/** If the new task is PERIODIC, this is its worst-case execution time. */
-	uint8_t wcet;
+	uint16_t wcet;
 	/** If the new task is PERIODIC, this is its period. */
-	uint8_t period;
+	uint16_t period;
 	/** If the new task is PERIODIC, this is its starting time. */
-	uint8_t start;
+	uint16_t start;
 }
 create_args_t;
 
@@ -133,11 +133,11 @@ struct td_struct
     /** A variable to save the hardware SP into when the task is suspended. */
     uint8_t*               volatile sp;   /* stack pointer into the "workSpace" */
     /** PERIODIC tasks need a worst-case execution time. */
-    uint8_t                         wcet;
+    uint16_t                         wcet;
 	/** PERIODIC tasks need to keep track of their next scheduled run time. */
 	uint16_t                         nrt;
 	/** PERIODIC tasks need a period. */
-	uint8_t                         period;
+	uint16_t                         period;
     /** The state of the task in this descriptor. */
     task_state_t                    state;
     /** The argument passed to Task_Create for this task. */

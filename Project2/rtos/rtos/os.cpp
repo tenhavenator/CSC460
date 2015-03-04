@@ -174,16 +174,26 @@ static void kernel_dispatch(void)
                 }
             }
         }
-
+		
 		if(periodic_queue.head != NULL)
 		{
 			for(i = 0; i < periodic_queue.size; i++)
 			{
-				
 				task_descriptor_t* next_task = dequeue(&periodic_queue);				
-				
 				if((next_task->state == READY)&&(next_task->nrt == clock)) 
 				{						
+					cur_task = next_task;
+					cur_task->state = RUNNING;
+					periodic_ticks_remaining = cur_task->wcet;
+					return;
+				}
+				else if ((next_task->state == READY)&&(next_task->nrt < clock)) {
+					/* This means periodic task has not finished (nrt gets updated when Task_Next() called */
+					if ((clock - next_task->nrt) > next_task->wcet) {
+						error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
+						OS_Abort();
+					}
+					
 					cur_task = next_task;
 					cur_task->state = RUNNING;
 					periodic_ticks_remaining = cur_task->wcet;
@@ -239,7 +249,14 @@ static void kernel_handle_request(void)
     case TIMER_EXPIRED:
 		// TODO: Update period task times 
 		kernel_update_periodic_times();
-
+		
+		/* Periodic tasks can be pre-empted by system tasks. */
+		if(cur_task->level == PERIODIC && cur_task->state == RUNNING)
+		{
+			cur_task->state = READY;
+			enqueue(&periodic_queue, cur_task);
+		}
+		
         /* Round robin tasks get pre-empted on every tick. */
         if(cur_task->level == RR && cur_task->state == RUNNING)
         {
@@ -266,6 +283,12 @@ static void kernel_handle_request(void)
 			if(cur_task->level == RR && kernel_request_create_args.level == PERIODIC) 
 			{
 				cur_task->state = READY;
+			}
+			
+			/* enqueue READY PERIODIC tasks. */
+			if(cur_task->level == PERIODIC && cur_task->state == READY)
+			{
+				enqueue(&periodic_queue, cur_task);
 			}
 			
             /* enqueue READY RR tasks. */
@@ -1050,8 +1073,27 @@ int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name)
 }
 
 
-int8_t   Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start)
+int8_t Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start)
 {	
+	
+	if (wcet > period) 
+	{
+		error_msg = ERR_1_WCET_GREATER_THAN_PERIOD;
+		OS_Abort();
+	}
+	
+	if (wcet == 0)
+	{
+		error_msg = ERR_2_WCET_EQUALS_ZERO;
+		OS_Abort();
+	}
+	
+	if (period == 0)
+	{
+		error_msg = ERR_3_PERIOD_EQUALS_ZERO;
+		OS_Abort();
+	}
+	
 	int retval;
 	uint8_t sreg;
 
@@ -1061,9 +1103,9 @@ int8_t   Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint
 	kernel_request_create_args.f = (voidfuncvoid_ptr)f;
 	kernel_request_create_args.arg = arg;
 	kernel_request_create_args.level = PERIODIC;
-	kernel_request_create_args.period = (uint8_t)period;
-	kernel_request_create_args.wcet = (uint8_t)wcet;
-	kernel_request_create_args.start = (uint8_t)start;
+	kernel_request_create_args.period = (uint16_t)period;
+	kernel_request_create_args.wcet = (uint16_t)wcet;
+	kernel_request_create_args.start = (uint16_t)start;
 
 	kernel_request = TASK_CREATE;
 	enter_kernel();

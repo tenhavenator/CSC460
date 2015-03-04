@@ -17,24 +17,14 @@ enum {
 
 /** GREEN ERRORS -- Initialize time errors. */
     
-/** PPP invalid -- Names must be in range [0 .. MAXPROCESS] */
-ERR_1_PPP_NAME_OUT_OF_RANGE,
+/** PERIODIC worst-case execution time must be less than period */
+ERR_1_WCET_GREATER_THAN_PERIOD,
 
-/** PERIODIC name is out of range [1 .. MAXNAME] */
-ERR_2_CREATE_NAME_OUT_OF_RANGE,
+/** PERIODIC wcet must be > 0 **/
+ERR_2_WCET_EQUALS_ZERO,
 
-/** PERIODIC task assigned name IDLE */
-ERR_3_PERIODIC_NAMED_IDLE,
-
-/** PERIODIC name already used */
-ERR_4_PERIODIC_NAME_IN_USE,
-
-/** PERIODIC name not in PPP array */
-ERR_5_NAME_NOT_IN_PPP,
-
-/** Time interval 0 in PPP array */
-ERR_6_TIME_INTERVAL_IN_PPP_0,
-
+/** PERIODIC period must be > 0 **/
+ERR_3_PERIOD_EQUALS_ZERO,
 
 /** RED ERRORS -- Run time errors. */
 
