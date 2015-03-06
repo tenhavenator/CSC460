@@ -25,7 +25,7 @@ void periodic_task()
 	{
 		/*
 		i1++;
-		DDRB = _BV(7);
+		
 		if ((clock % 200) >= 100) {
 			PORTB = _BV(7);	
 		}
@@ -33,11 +33,11 @@ void periodic_task()
 			PORTB = 0;
 		}
 		*/
-		
+		DDRB = _BV(7);
 		PORTB = _BV(7);
-		_delay_ms(100);
+		_delay_ms(500);
 		PORTB = 0;
-		_delay_ms(100);
+		_delay_ms(500);
 		
 		Task_Next();
 	}
@@ -64,11 +64,9 @@ int r_main(void)
 	
 	//_delay_ms(000);
 	
-	Task_Create_Periodic(periodic_task, 1, 256, 255, 50);
+	Task_Create_Periodic(periodic_task, 1, 1000, 250, 0);
 	
-	//Task_Create_Periodic(periodic_task, 1, 50, 40, 525);
-	
-	//Task_Create_Periodic(periodic_task, 1, 50, 40, 565);
+	_delay_ms(50);
 	
 	/*
 	int i;

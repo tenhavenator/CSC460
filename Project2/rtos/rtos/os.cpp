@@ -47,6 +47,9 @@ static volatile int kernel_request_retval;
 /** Number of tasks created so far */
 static queue_t dead_pool_queue;
 
+/** Keeps track of how long the current periodic task has been delayed by a system task */
+static uint16_t periodic_time_preempted = 0;
+
 /** The ready queue for RR tasks. Their scheduling is round-robin. */
 static queue_t rr_queue;
 
@@ -55,12 +58,6 @@ static queue_t system_queue;
 
 /** The ready queue for PERIODIC tasks. Their scheduling is based on period and start time. */
 static queue_t periodic_queue;
-
-/** time remaining in current periodic task */
-static volatile uint8_t periodic_ticks_remaining = 0;
-
-/** Indicates if periodic task in this slot has already run this time */
-static uint8_t slot_task_finished = 0;
 
 /** Error message used in OS_Abort() */
 static uint8_t volatile error_msg = ERR_RUN_1_USER_CALLED_OS_ABORT;
@@ -82,7 +79,6 @@ static void kernel_terminate_task(void);
 static void enqueue(queue_t* queue_ptr, task_descriptor_t* task_to_add);
 static task_descriptor_t* dequeue(queue_t* queue_ptr);
 
-static void kernel_update_periodic_times(void);
 static void idle (void);
 static void _delay_25ms(void);
 
@@ -154,7 +150,7 @@ static void kernel_dispatch(void)
      */
 	uint8_t i;
 
-	// TODO: does this next line not mean that periodic tasks will not be preempted if they are running
+	/* TODO: We may have to change this so it goes into the loop even if it is running */
     if(cur_task->state != RUNNING || cur_task == idle_task)
     {
         if(system_queue.head != NULL)
@@ -164,6 +160,7 @@ static void kernel_dispatch(void)
 			    task_descriptor_t* next_task = dequeue(&system_queue);
                 if((next_task->state == READY))
                 {
+					periodic_time_preempted = 0;
                     cur_task = next_task;
                     cur_task->state = RUNNING;
                     return;
@@ -175,36 +172,45 @@ static void kernel_dispatch(void)
             }
         }
 		
+		int number_ready = 0;
+		
 		if(periodic_queue.head != NULL)
 		{
-			for(i = 0; i < periodic_queue.size; i++)
+			int temp_queue_size = periodic_queue.size;
+			for(i = 0; i < temp_queue_size; i++)
 			{
-				task_descriptor_t* next_task = dequeue(&periodic_queue);				
-				if((next_task->state == READY)&&(next_task->nrt == clock)) 
-				{						
-					cur_task = next_task;
-					cur_task->state = RUNNING;
-					periodic_ticks_remaining = cur_task->wcet;
-					return;
+				task_descriptor_t* next_task = dequeue(&periodic_queue);	
+				
+				if (next_task->elapsed > next_task->wcet) {
+					error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
+					OS_Abort();
 				}
-				else if ((next_task->state == READY)&&(next_task->nrt < clock)) {
-					/* This means periodic task has not finished (nrt gets updated when Task_Next() called */
-					if ((clock - next_task->nrt) > next_task->wcet) {
-						error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
-						OS_Abort();
-					}
-					
+				
+				if((next_task->state == READY)&&(next_task->nrt == 0)) 
+				{
 					cur_task = next_task;
-					cur_task->state = RUNNING;
-					periodic_ticks_remaining = cur_task->wcet;
-					return;
+					number_ready ++;
 				}
 				else
 				{
 					enqueue(&periodic_queue, next_task);
 				}
-			}	
+			}
+			/* If more than one task is ready, that is a scheduling error */
+			if (number_ready > 1)
+			{
+				error_msg = ERR_RUN_8_PERIODIC_TASK_COLLISION;
+				OS_Abort();
+			}
 		} 
+		
+		/* If one task is ready, set new task to run or non-finished task to continue running */
+		if (number_ready == 1)
+		{
+			cur_task->elapsed ++;
+			cur_task->state = RUNNING;
+			return;
+		}
 		
         if(rr_queue.head != NULL)
         {
@@ -246,11 +252,22 @@ static void kernel_handle_request(void)
         /* Should not happen. */
         break;
 
-    case TIMER_EXPIRED:
-		// TODO: Update period task times 
-		kernel_update_periodic_times();
+    case TIMER_EXPIRED:		
+		/* Update the time to run for PERIODIC tasks */
+		int i;
+		for(i = 0; i < periodic_queue.size; i++)
+		{
+			task_descriptor_t* next_task = dequeue(&periodic_queue);
+			if (next_task->nrt > 0)
+			{
+				next_task->nrt --;
+			}
+			enqueue(&periodic_queue, next_task);
+		}
+		
 		
 		/* Periodic tasks can be pre-empted by system tasks. */
+		
 		if(cur_task->level == PERIODIC && cur_task->state == RUNNING)
 		{
 			cur_task->state = READY;
@@ -314,7 +331,8 @@ static void kernel_handle_request(void)
 			break;
 
 	    case PERIODIC:
-			cur_task->nrt = cur_task->nrt + cur_task->period;
+			cur_task->nrt = cur_task->period - cur_task->elapsed;
+			cur_task->elapsed = 0;
 			enqueue(&periodic_queue, cur_task);
 	        break;
 
@@ -758,13 +776,14 @@ static int kernel_create_task()
 	p->period = 0;
 	p->wcet = 0;
 	p->nrt = 0;
+	p->elapsed = 0;
 
 	switch(kernel_request_create_args.level)
 	{
 	case PERIODIC:
 		p->period = kernel_request_create_args.period;
 		p->wcet = kernel_request_create_args.wcet;
-		p->nrt = clock + kernel_request_create_args.start;
+		p->nrt = kernel_request_create_args.start;
 		enqueue(&periodic_queue, p);
 		break;
 
@@ -845,33 +864,6 @@ static task_descriptor_t* dequeue(queue_t* queue_ptr)
     queue_ptr->size--;
 
     return task_ptr;
-}
-
-static void kernel_update_periodic_times(void)
-{
-	if (cur_task->level == PERIODIC)
-	{
-		periodic_ticks_remaining--;
-	
-		if(periodic_ticks_remaining == 0)
-		{
-			// == testing error
-			//error_msg = ERR_2_CREATE_NAME_OUT_OF_RANGE;
-			//OS_Abort();
-			// == end test
-		
-			// check if periodic task has gone on too long
-			//if(cur_task != NULL && cur_task->level == PERIODIC && slot_task_finished == 0)
-			//{
-				/* error handling */
-			//	error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
-			//	OS_Abort();
-			//} 
-		}
-	}
-	
-	// check time done, check if thing is done
-	// if done, do slot_task_finished = 1
 }
 
 #undef SLOW_CLOCK

@@ -138,6 +138,8 @@ struct td_struct
 	uint16_t                         nrt;
 	/** PERIODIC tasks need a period. */
 	uint16_t                         period;
+	/** PERIODIC tasks need to keep track of how long they've run for this period. */
+	uint16_t                         elapsed;
     /** The state of the task in this descriptor. */
     task_state_t                    state;
     /** The argument passed to Task_Create for this task. */
