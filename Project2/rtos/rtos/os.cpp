@@ -1024,27 +1024,8 @@ void OS_Abort(void)
     }
 }
 
-
-/**
- * @param f  a parameterless function to be created as a process instance
- * @param arg an integer argument to be assigned to this process instanace
- * @param level assigned scheduling level: SYSTEM, PERIODIC or RR
- * @param name assigned PERIODIC process name
- * @return 0 if not successful; otherwise non-zero.
- * @sa Task_GetArg(), PPP[].
- *
- *  A new process  is created to execute the parameterless
- *  function @a f with an initial parameter @a arg, which is retrieved
- *  by a call to Task_GetArg().  If a new process cannot be
- *  created, 0 is returned; otherwise, it returns non-zero.
- *  The created process will belong to its scheduling @a level.
- *  If the process is PERIODIC, then its @a name is a user-specified name
- *  to be used in the PPP[] array. Otherwise, @a name is ignored.
- * @sa @ref policy
- */
-int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name)
+int8_t   Task_Create_System(void (*f)(void), int16_t arg)
 {
-	/* This will be deprecated so do not add to it */
     int retval;
     uint8_t sreg;
 
@@ -1053,7 +1034,28 @@ int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name)
 
     kernel_request_create_args.f = (voidfuncvoid_ptr)f;
     kernel_request_create_args.arg = arg;
-    kernel_request_create_args.level = (uint8_t)level;
+    kernel_request_create_args.level = SYSTEM;
+
+    kernel_request = TASK_CREATE;
+    enter_kernel();
+
+    retval = kernel_request_retval;
+    SREG = sreg;
+
+    return retval;	
+}
+
+int8_t   Task_Create_RR(    void (*f)(void), int16_t arg)
+{
+    int retval;
+    uint8_t sreg;
+
+    sreg = SREG;
+    Disable_Interrupt();
+
+    kernel_request_create_args.f = (voidfuncvoid_ptr)f;
+    kernel_request_create_args.arg = arg;
+    kernel_request_create_args.level = RR;
 
     kernel_request = TASK_CREATE;
     enter_kernel();
@@ -1063,7 +1065,6 @@ int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name)
 
     return retval;
 }
-
 
 int8_t Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start)
 {	

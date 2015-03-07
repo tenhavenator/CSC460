@@ -7,9 +7,6 @@
 
 extern int Task_Create(void (*f)(void), int arg, unsigned int level, unsigned int name);
 extern int8_t   Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start);
-extern uint16_t clock;
-// for testing - please delete
-int i1 = 0;
 
 SERVICE * serv;
 
@@ -23,16 +20,6 @@ void periodic_task()
 {
 	for (;;) 
 	{
-		/*
-		i1++;
-		
-		if ((clock % 200) >= 100) {
-			PORTB = _BV(7);	
-		}
-		else {
-			PORTB = 0;
-		}
-		*/
 		DDRB = _BV(7);
 		PORTB = _BV(7);
 		_delay_ms(500);
