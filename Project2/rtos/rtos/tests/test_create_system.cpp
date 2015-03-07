@@ -2,11 +2,11 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-/* To run this test, rename r_main_ to r_main and rename any other
- * current declarations of r_main to r_main_. There can only be 
- * 1 instance of r_main at a time. 
+/* To run this test, comment out the original function declaration and uncomment the r_main one. 
+ * There can only be one r_main declared at any time.
  */
-int r_main_(void)
+// int r_main(void)
+int r_main_test_create_system(void)
 {    	
 	return 0;
 }

@@ -156,7 +156,64 @@
     <Compile Include="application.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="tests\test1.cpp">
+    <Compile Include="tests\test_create_periodic.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_create_rr.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_create_system.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_long.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_period_zero.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_schedule_collision.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_schedule_valid.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_wcet_greater_than_period.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_wcet_zero.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_preempt_periodic_middle.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_preempt_periodic_start.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_preempt_rr.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_publish_interrupt.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_publish_periodic.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_publish_rr.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_publish_system.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_subscribe_periodic.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_subscribe_rr.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_subscribe_system.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_too_many_subscribers.cpp">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
