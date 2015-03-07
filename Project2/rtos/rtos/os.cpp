@@ -331,7 +331,9 @@ static void kernel_handle_request(void)
 			break;
 
 	    case PERIODIC:
-			cur_task->nrt = cur_task->period - cur_task->elapsed;
+			/* The +1 needs to be there because time elapsed is run before a periodic task
+			 * This means that elapsed time will always be ahead of the clock by 1 tick */
+			cur_task->nrt = cur_task->period - cur_task->elapsed + 1;
 			cur_task->elapsed = 0;
 			enqueue(&periodic_queue, cur_task);
 	        break;
