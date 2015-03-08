@@ -199,7 +199,7 @@ static void kernel_dispatch(void)
 			/* If more than one task is ready, that is a scheduling error */
 			if (number_ready > 1)
 			{
-				error_msg = ERR_RUN_8_PERIODIC_TASK_COLLISION;
+				error_msg = ERR_RUN_7_PERIODIC_TASK_COLLISION;
 				OS_Abort();
 			}
 		} 
@@ -356,12 +356,6 @@ static void kernel_handle_request(void)
     case SUBSCRIBE:
     {
         SERVICE* serv = kernel_request_service_args.service;
-			
-        if(serv->subscribers_count >= MAXSUBSCRIBERS)
-        {
-            error_msg = ERR_RUN_7_TOO_MANY_SUBSCRIBERS;
-            OS_Abort();
-        }
 			
         switch(cur_task->level)
         {
@@ -1232,7 +1226,12 @@ void Service_Publish(SERVICE *s, int16_t v)
  * Runtime entry point into the program; just start the RTOS.  The application layer must define r_main() for its entry point.
  */
 int main()
-{
+{	
+	TCCR3B |= (_BV(CS31));
+	TIMSK3 |= _BV(OCIE3A);
+	OCR3A = TCNT3 + 10000;
+	
 	OS_Init();
 	return 0;
 }
+

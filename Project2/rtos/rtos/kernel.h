@@ -38,9 +38,6 @@ extern "C" {
 // Maximum number of services
 #define MAXSERVICE 10
 
-// Maximum number of subscribers a service can have
-#define MAXSUBSCRIBERS 10
-
 /** LEDs for OS_Abort() Arduino Pin 43*/
 #define LED_RED_MASK    (uint8_t)_BV(6)
 
@@ -108,8 +105,8 @@ typedef struct td_struct task_descriptor_t;
  */
 struct service {
     uint8_t subscribers_count;
-    task_descriptor_t* subscribers[MAXSUBSCRIBERS];
-    int16_t* retvals[MAXSUBSCRIBERS];
+    task_descriptor_t* subscribers[MAXPROCESS];
+    int16_t* retvals[MAXPROCESS];
 };
 
 /*
