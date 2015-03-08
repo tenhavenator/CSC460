@@ -35,7 +35,7 @@ void periodic_task()
 	}
 }
 
-int r_main(void)
+int r_main_app(void)
 {    	
 	i1 = 0;
 	//Task_Create(rr_task, 0, RR, 1);

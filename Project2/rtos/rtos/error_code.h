@@ -23,9 +23,6 @@ ERR_1_WCET_GREATER_THAN_PERIOD,
 /** PERIODIC wcet must be > 0 **/
 ERR_2_WCET_EQUALS_ZERO,
 
-/** PERIODIC period must be > 0 **/
-ERR_3_PERIOD_EQUALS_ZERO,
-
 /** RED ERRORS -- Run time errors. */
 
 /** User called OS_Abort() */

@@ -1070,7 +1070,8 @@ int8_t   Task_Create_RR(    void (*f)(void), int16_t arg)
 
 int8_t Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start)
 {	
-	
+	/* You can't have wcet greater than period or equal to zero */
+	/* This also prevents period from being equal to zero */
 	if (wcet > period) 
 	{
 		error_msg = ERR_1_WCET_GREATER_THAN_PERIOD;
@@ -1080,12 +1081,6 @@ int8_t Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16
 	if (wcet == 0)
 	{
 		error_msg = ERR_2_WCET_EQUALS_ZERO;
-		OS_Abort();
-	}
-	
-	if (period == 0)
-	{
-		error_msg = ERR_3_PERIOD_EQUALS_ZERO;
 		OS_Abort();
 	}
 	
