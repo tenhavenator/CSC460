@@ -1,3 +1,11 @@
+/*
+	Expected results: 
+	Look at the logic analyzer output
+	- you should see a fast pulse (RR) on digital pin 13
+	- you should also see a long pulse on digital pin 12 that stops the fast pulse (periodic)
+	- the periodic task should have a period of 0.2s
+*/
+
 #include "../os.h"
 #include <avr/io.h>
 #include <util/delay.h>

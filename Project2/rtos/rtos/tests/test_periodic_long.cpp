@@ -1,3 +1,9 @@
+/*
+	Expected results: 
+	Look  at the logic analyzer output
+	- you should see digital pin 13 go on and off for 100 ms at a time with a period of 1 second
+*/
+
 #include "../os.h"
 #include <avr/io.h>
 #include <util/delay.h>

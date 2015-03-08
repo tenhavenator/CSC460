@@ -1,3 +1,10 @@
+/*
+	Expected results: 
+	Look  at the ERROR LEDs
+	- you should see the red (runtime) LED light up
+	- one long pulse, followed by 3 short ones
+*/
+
 #include "../os.h"
 #include <avr/io.h>
 #include <util/delay.h>

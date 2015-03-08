@@ -46,7 +46,8 @@ ERR_RUN_6_PERIODIC_IPC_ERROR,
 // Two PERIODIC tasks are scheduled at the same time
 ERR_RUN_7_PERIODIC_TASK_COLLISION,
 
-
+// Two PERIODIC tasks are scheduled at the same time
+ERR_RUN_8_PERIODIC_PREEMPTED_TOO_LONG,
 };
 
 

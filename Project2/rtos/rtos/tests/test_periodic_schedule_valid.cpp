@@ -1,3 +1,10 @@
+/*
+	Expected results: 
+	Look at the logic analyzer output
+	- you should see digital pin 13 go on and off, then pin 12, pin 11, repeatedly
+	- each should have a period of 15ms
+*/
+
 #include "../os.h"
 #include <avr/io.h>
 

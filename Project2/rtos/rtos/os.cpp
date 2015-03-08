@@ -50,6 +50,9 @@ static queue_t dead_pool_queue;
 /** Keeps track of how long the current periodic task has been delayed by a system task */
 static uint16_t periodic_time_preempted = 0;
 
+/** Keeps track of how many periodic tasks are currently ready **/
+static uint8_t number_ready = 0;
+
 /** The ready queue for RR tasks. Their scheduling is round-robin. */
 static queue_t rr_queue;
 
@@ -149,10 +152,35 @@ static void kernel_dispatch(void)
      * Do not select a task to run if it is in the WAITING state
      */
 	uint8_t i;
-
-	/* TODO: We may have to change this so it goes into the loop even if it is running */
+	
+	/* If more than one task is ready, that is a scheduling error */
+	if (number_ready > 1)
+	{
+		error_msg = ERR_RUN_7_PERIODIC_TASK_COLLISION;
+		OS_Abort();
+	}
+	
+	number_ready = 0;
+	for(i = 0; i < periodic_queue.size; i++)
+	{
+		task_descriptor_t* next_task = dequeue(&periodic_queue);		
+		if((next_task->state == READY)&&(next_task->nrt == 0))
+		{
+			number_ready ++;
+		}
+		enqueue(&periodic_queue, next_task);
+	}
+	
+	/* If more than one task is ready, that is a scheduling error */
+	if (number_ready > 1)
+	{
+		error_msg = ERR_RUN_7_PERIODIC_TASK_COLLISION;
+		OS_Abort();
+	}
+	
     if(cur_task->state != RUNNING || cur_task == idle_task)
     {
+		/* System tasks will preempt periodic and RR tasks */
         if(system_queue.head != NULL)
         {
             for(i = 0; i < system_queue.size; i++)
@@ -160,7 +188,6 @@ static void kernel_dispatch(void)
 			    task_descriptor_t* next_task = dequeue(&system_queue);
                 if((next_task->state == READY))
                 {
-					periodic_time_preempted = 0;
                     cur_task = next_task;
                     cur_task->state = RUNNING;
                     return;
@@ -172,42 +199,34 @@ static void kernel_dispatch(void)
             }
         }
 		
-		int number_ready = 0;
-		
+		/* We can assume number_ready is 0 or 1 because >1 aborts the OS above */
 		if(periodic_queue.head != NULL)
 		{
+
 			int temp_queue_size = periodic_queue.size;
 			for(i = 0; i < temp_queue_size; i++)
 			{
-				task_descriptor_t* next_task = dequeue(&periodic_queue);	
+				task_descriptor_t* next_task = dequeue(&periodic_queue);
 				
-				if (next_task->elapsed > next_task->wcet) {
-					error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
-					OS_Abort();
-				}
-				
-				if((next_task->state == READY)&&(next_task->nrt == 0)) 
+				if((next_task->state == READY)&&(next_task->nrt == 0))
 				{
+					if (next_task->elapsed > next_task->wcet) {
+						error_msg = ERR_RUN_3_PERIODIC_TOOK_TOO_LONG;
+						OS_Abort();
+					}
 					cur_task = next_task;
-					number_ready ++;
 				}
 				else
 				{
 					enqueue(&periodic_queue, next_task);
 				}
 			}
-			/* If more than one task is ready, that is a scheduling error */
-			if (number_ready > 1)
-			{
-				error_msg = ERR_RUN_7_PERIODIC_TASK_COLLISION;
-				OS_Abort();
-			}
-		} 
+			
+		}
 		
 		/* If one task is ready, set new task to run or non-finished task to continue running */
 		if (number_ready == 1)
 		{
-			cur_task->elapsed ++;
 			cur_task->state = RUNNING;
 			return;
 		}
@@ -261,16 +280,22 @@ static void kernel_handle_request(void)
 			if (next_task->nrt > 0)
 			{
 				next_task->nrt --;
-			}
+			}			
 			enqueue(&periodic_queue, next_task);
 		}
 		
+		/* Periodic tasks must be checked first so we know if we are preempting */
+		/* If preempting a periodic task we need to stretch the wcet */
+		/* If a system task is preempting a periodic task, keep track of how long */
+		if ((cur_task->level == SYSTEM)&&(number_ready == 1)) {
+			periodic_time_preempted ++;
+		}
 		
 		/* Periodic tasks can be pre-empted by system tasks. */
-		
 		if(cur_task->level == PERIODIC && cur_task->state == RUNNING)
 		{
 			cur_task->state = READY;
+			cur_task->elapsed ++;
 			enqueue(&periodic_queue, cur_task);
 		}
 		
@@ -331,10 +356,20 @@ static void kernel_handle_request(void)
 			break;
 
 	    case PERIODIC:
-			/* The +1 needs to be there because time elapsed is run before a periodic task
-			 * This means that elapsed time will always be ahead of the clock by 1 tick */
-			cur_task->nrt = cur_task->period - cur_task->elapsed + 1;
+			
+			/* if a periodic task is preempted for so long that it misses an entire period,
+			 * that is an error! */
+			if ((cur_task->elapsed + periodic_time_preempted) > cur_task->period) {
+				error_msg = ERR_RUN_8_PERIODIC_PREEMPTED_TOO_LONG;
+				OS_Abort();
+			}
+			
+			/* The elapsed-1 needs to be in the following line because time elapsed is incremented before a 
+			 * periodic task runs... this means that elapsed time will always be ahead of the clock by 1 tick */
+			
+			cur_task->nrt = cur_task->period -  cur_task->elapsed - periodic_time_preempted ;
 			cur_task->elapsed = 0;
+			periodic_time_preempted = 0;
 			enqueue(&periodic_queue, cur_task);
 	        break;
 

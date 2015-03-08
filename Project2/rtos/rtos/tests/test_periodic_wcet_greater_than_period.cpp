@@ -1,3 +1,10 @@
+/*
+	Expected results: 
+	Watch the ERROR LEDs
+	- you should see the green (initialize-time) LED light up
+	- one long pulse, followed by one short one
+*/
+
 #include "../os.h"
 #include <avr/io.h>
 
