@@ -18,6 +18,7 @@ void system_task_to_create()
 int r_main(void)
 //int r_main_test_create_system(void)
 {    	
+	DDRB = _BV(7);
 	Task_Create_System(system_task_to_create, 0);
 	return 0;
 }
