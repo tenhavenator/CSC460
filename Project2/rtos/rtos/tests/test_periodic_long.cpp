@@ -8,7 +8,6 @@ void periodic_task_long()
 {
 	for (;;)
 	{
-		DDRB = _BV(7);
 		PORTB = _BV(7);
 		_delay_ms(100);
 		PORTB = 0;
@@ -22,6 +21,7 @@ void periodic_task_long()
 // int r_main(void)
 int r_main_test_periodic_long(void)
 {    	
+	DDRB = _BV(7);
 	Task_Create_Periodic(periodic_task_long, 0, 200, 21, 0);
 	return 0;
 }

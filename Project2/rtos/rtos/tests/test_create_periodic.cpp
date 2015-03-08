@@ -7,7 +7,6 @@ void periodic_task_to_create()
 {
 	for (;;)
 	{
-		DDRB = _BV(7);
 		PORTB = _BV(7);
 		PORTB = 0;
 		Task_Next();
@@ -20,6 +19,7 @@ void periodic_task_to_create()
 // int r_main(void)
 int r_main_test_create_periodic(void)
 {    	
+	DDRB = _BV(7);
 	Task_Create_Periodic(periodic_task_to_create, 0, 2, 1, 0);
 	return 0;
 }
