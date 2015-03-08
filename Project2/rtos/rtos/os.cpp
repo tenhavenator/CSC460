@@ -738,7 +738,8 @@ static int kernel_create_task()
 
     if (dead_pool_queue.head == NULL)
     {
-        /* Too many tasks! */
+        error_msg = ERR_RUN_2_TOO_MANY_TASKS;
+		OS_Abort();
         return 0;
     }
 
