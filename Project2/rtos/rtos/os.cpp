@@ -1227,10 +1227,6 @@ void Service_Publish(SERVICE *s, int16_t v)
  */
 int main()
 {	
-	TCCR3B |= (_BV(CS31));
-	TIMSK3 |= _BV(OCIE3A);
-	OCR3A = TCNT3 + 10000;
-	
 	OS_Init();
 	return 0;
 }

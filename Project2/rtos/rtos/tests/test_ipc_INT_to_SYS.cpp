@@ -48,8 +48,8 @@ static void task_rr_flag_checker()
 /* To run this test, comment out the original function declaration and uncomment the r_main one. 
  * There can only be one r_main declared at any time.
  */
-//int r_main(void)
-int r_main_test_ipc_INT_to_SYS(void)
+int r_main(void)
+//int r_main_test_ipc_INT_to_SYS(void)
 {    	
 	TEST_PORT_DDR = TEST_PIN;
 	TEST_PORT = 0;
