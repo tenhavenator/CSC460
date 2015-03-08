@@ -6,7 +6,7 @@
  * There can only be one r_main declared at any time.
  */
 // int r_main(void)
-int r_main_test_subscribe_rr(void)
+int r_main_test_ipc_PER_to_SYS(void)
 {    	
 	return 0;
 }
