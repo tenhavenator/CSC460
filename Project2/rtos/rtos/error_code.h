@@ -43,11 +43,8 @@ ERR_RUN_5_RTOS_INTERNAL_ERROR,
 // A PERIODIC task tries to subscribe to a service
 ERR_RUN_6_PERIODIC_IPC_ERROR, 
 
-// Too many subscribers are already subscribed to a service
-ERR_RUN_7_TOO_MANY_SUBSCRIBERS,
-
 // Two PERIODIC tasks are scheduled at the same time
-ERR_RUN_8_PERIODIC_TASK_COLLISION,
+ERR_RUN_7_PERIODIC_TASK_COLLISION,
 
 
 };

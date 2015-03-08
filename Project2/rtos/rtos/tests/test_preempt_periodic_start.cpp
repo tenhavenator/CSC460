@@ -23,8 +23,8 @@ static void periodic_task_preempted()
 /* To run this test, comment out the original function declaration and uncomment the r_main one. 
  * There can only be one r_main declared at any time.
  */
-int r_main(void)
-///int r_main_test_preempt_periodic_start(void)
+//int r_main(void)
+int r_main_test_preempt_periodic_start(void)
 {    	
 	DDRB = _BV(7) | _BV(6);
 	

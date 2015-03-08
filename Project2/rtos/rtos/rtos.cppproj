@@ -219,9 +219,6 @@
     <Compile Include="tests\test_preempt_rr.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="tests\test_too_many_subscribers.cpp">
-      <SubType>compile</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="tests" />
