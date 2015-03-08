@@ -15,8 +15,8 @@ void system_task_to_create()
 /* To run this test, comment out the original function declaration and uncomment the r_main one. 
  * There can only be one r_main declared at any time.
  */
-int r_main(void)
-//int r_main_test_create_system(void)
+//int r_main(void)
+int r_main_test_create_system(void)
 {    	
 	DDRB = _BV(7);
 	Task_Create_System(system_task_to_create, 0);
