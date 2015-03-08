@@ -165,6 +165,33 @@
     <Compile Include="tests\test_create_system.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="tests\test_ipc_INT_to_RR.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_INT_to_SYS.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_PER_to_RR.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_PER_to_SYS.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_RR_to_RR.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_RR_to_SYS.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_SYS_to_RR.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_SYS_to_SYS.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_periodic_ipc_subscribe.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="tests\test_periodic_long.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -190,27 +217,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="tests\test_preempt_rr.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_publish_interrupt.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_publish_periodic.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_publish_rr.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_publish_system.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_subscribe_periodic.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_subscribe_rr.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="tests\test_subscribe_system.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="tests\test_too_many_subscribers.cpp">
