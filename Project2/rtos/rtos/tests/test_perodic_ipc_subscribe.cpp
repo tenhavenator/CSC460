@@ -6,7 +6,7 @@
  * There can only be one r_main declared at any time.
  */
 // int r_main(void)
-int r_main_test_publish_rr(void)
+int r_main_test_too_many_subscribers(void)
 {    	
 	return 0;
 }
