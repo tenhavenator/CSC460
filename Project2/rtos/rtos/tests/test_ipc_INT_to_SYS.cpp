@@ -13,12 +13,15 @@
 
 static SERVICE * service;
 static int16_t expected_value = 274;
-extern volatile int publish_flag;
-
 
 static void task_sys_subscriber(void)
 {
 	int16_t actual_value = 0;
+	
+	TCCR3B |= (_BV(CS31));
+	OCR3A = TCNT3 + 500;
+	TIMSK3 |= _BV(OCIE3A);
+	
 	Service_Subscribe(service, &actual_value);
 	
 	if(actual_value == expected_value)
@@ -29,26 +32,16 @@ static void task_sys_subscriber(void)
 	Task_Terminate();
 }
 
-static void task_rr_flag_checker()
-{
-	TCCR3B |= (_BV(CS31));
-	OCR3A = TCNT3 + 64000;
-	TIMSK3 |= _BV(OCIE3A);
-	
-	for(;;)
-	{
-		if(publish_flag == 1)
-		{
-			Service_Publish(service, expected_value);
-			Task_Terminate();
-		}
-	}
-}
+/*ISR(TIMER3_COMPA_vect)
+{			
+	Service_Publish(service, expected_value);
+	OCR3A = TCNT3 + 500;
+}*/
 
 /* To run this test, comment out the original function declaration and uncomment the r_main one. 
  * There can only be one r_main declared at any time.
  */
-// int r_main(void)
+//int r_main(void)
 int r_main_test_ipc_INT_to_SYS(void)
 {    	
 	TEST_PORT_DDR = TEST_PIN;
@@ -57,7 +50,6 @@ int r_main_test_ipc_INT_to_SYS(void)
 	service = Service_Init();
 	
 	Task_Create_System(task_sys_subscriber, 0);
-	Task_Create_RR(task_rr_flag_checker, 0);
 	
 	Task_Terminate();
 	

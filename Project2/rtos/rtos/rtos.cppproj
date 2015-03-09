@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
@@ -188,6 +188,9 @@
     </Compile>
     <Compile Include="tests\test_ipc_SYS_to_SYS.cpp">
       <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests\test_ipc_task_INT.cpp">
+	  <SubType>compile</SubType>
     </Compile>
     <Compile Include="tests\test_now.cpp">
       <SubType>compile</SubType>
