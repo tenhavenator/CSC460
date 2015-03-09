@@ -153,13 +153,6 @@ static void kernel_dispatch(void)
      */
 	uint8_t i;
 	
-	/* If more than one task is ready, that is a scheduling error */
-	if (number_ready > 1)
-	{
-		error_msg = ERR_RUN_7_PERIODIC_TASK_COLLISION;
-		OS_Abort();
-	}
-	
 	number_ready = 0;
 	for(i = 0; i < periodic_queue.size; i++)
 	{
@@ -367,7 +360,7 @@ static void kernel_handle_request(void)
 			/* The elapsed-1 needs to be in the following line because time elapsed is incremented before a 
 			 * periodic task runs... this means that elapsed time will always be ahead of the clock by 1 tick */
 			
-			cur_task->nrt = cur_task->period -  cur_task->elapsed - periodic_time_preempted ;
+			cur_task->nrt = cur_task->period -  cur_task->elapsed - periodic_time_preempted;
 			cur_task->elapsed = 0;
 			periodic_time_preempted = 0;
 			enqueue(&periodic_queue, cur_task);
@@ -430,10 +423,30 @@ static void kernel_handle_request(void)
            }
 		   
            serv->subscribers_count = 0;
-      }
-	    
-           break;
+		   
+		   switch(cur_task->level)
+		   {
+		       case SYSTEM:
+	               enqueue(&system_queue, cur_task);
+			       break;
 
+	           case PERIODIC:
+			       enqueue(&periodic_queue, cur_task);
+	               break;
+
+	           case RR:
+	               enqueue(&rr_queue, cur_task);
+	               break;
+
+	          default: 
+			       break;
+		   }
+		   
+		   cur_task->state = READY;
+		   break;
+		   
+      }
+	   
     default:
         /* Should never happen */
         error_msg = ERR_RUN_5_RTOS_INTERNAL_ERROR;

@@ -47,6 +47,8 @@ static void task_rr_flag_checker()
 
 ISR(TIMER3_COMPA_vect)
 {		
+	Service_Publish(service, expected_value);
+	
 	OCR3A = 0;
 	TIMSK3 = 0;
 	publish_flag = 1;
