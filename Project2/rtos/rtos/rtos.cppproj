@@ -189,6 +189,9 @@
     <Compile Include="tests\test_ipc_SYS_to_SYS.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="tests\test_ipc_task_INT.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="tests\test_periodic_ipc_subscribe.cpp">
       <SubType>compile</SubType>
     </Compile>

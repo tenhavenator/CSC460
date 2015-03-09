@@ -427,14 +427,15 @@ static void kernel_handle_request(void)
 		   switch(cur_task->level)
 		   {
 		       case SYSTEM:
-	               enqueue(&system_queue, cur_task);
 			       break;
 
 	           case PERIODIC:
+				   cur_task->state = READY;
 			       enqueue(&periodic_queue, cur_task);
 	               break;
 
 	           case RR:
+			       cur_task->state = READY;
 	               enqueue(&rr_queue, cur_task);
 	               break;
 
@@ -442,9 +443,8 @@ static void kernel_handle_request(void)
 			       break;
 		   }
 		   
-		   cur_task->state = READY;
-		   break;
 		   
+		   break;
       }
 	   
     default:
