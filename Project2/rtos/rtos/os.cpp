@@ -85,8 +85,7 @@ static task_descriptor_t* dequeue(queue_t* queue_ptr);
 static void idle (void);
 static void _delay_25ms(void);
 
-
-// Might want to change these to static ?
+/** Keeps track of the current tick **/
 uint16_t clock;
 
 // Globals added for implementing services
@@ -153,6 +152,7 @@ static void kernel_dispatch(void)
      */
 	uint8_t i;
 	
+	/* Check how many periodic tasks are ready */
 	number_ready = 0;
 	for(i = 0; i < periodic_queue.size; i++)
 	{
@@ -357,9 +357,7 @@ static void kernel_handle_request(void)
 				OS_Abort();
 			}
 			
-			/* The elapsed-1 needs to be in the following line because time elapsed is incremented before a 
-			 * periodic task runs... this means that elapsed time will always be ahead of the clock by 1 tick */
-			
+			/* Update next run time of completed task based on elapsed time and preempted time */
 			cur_task->nrt = cur_task->period -  cur_task->elapsed - periodic_time_preempted;
 			cur_task->elapsed = 0;
 			periodic_time_preempted = 0;
@@ -1069,6 +1067,8 @@ void OS_Abort(void)
     }
 }
 
+/** @brief Create a new SYSTEM task.
+ */
 int8_t   Task_Create_System(void (*f)(void), int16_t arg)
 {
     int retval;
@@ -1090,6 +1090,8 @@ int8_t   Task_Create_System(void (*f)(void), int16_t arg)
     return retval;	
 }
 
+/** @brief Create a new RR task.
+ */
 int8_t   Task_Create_RR(    void (*f)(void), int16_t arg)
 {
     int retval;
@@ -1111,6 +1113,8 @@ int8_t   Task_Create_RR(    void (*f)(void), int16_t arg)
     return retval;
 }
 
+/** @brief Create a new PERIODIC task.
+ */
 int8_t Task_Create_Periodic(void(*f)(void), int16_t arg, uint16_t period, uint16_t wcet, uint16_t start)
 {	
 	/* You can't have wcet greater than period or equal to zero */
@@ -1201,19 +1205,25 @@ int Task_GetArg(void)
     return arg;
 }
 
-// Should we disable interrupts in here like all the other functions?
+/* 
+ * @brief Retrieves the current time, down to the millisecond
+ */
 uint16_t Now()
 {
+	uint8_t sreg;
+
+    sreg = SREG;
+	Disable_Interrupt();
 	uint16_t now = (clock * 5) + (uint16_t) ((OCR1A - TCNT1) / MS_CYCLES);
+	SREG = sreg;
 	return now;	
 }
 
 /* 
- * Initializes a new service
+ * @brief Initializes a new service
  */
 SERVICE *Service_Init()
 {
-    // Should interrupts be disabled in here too?
     uint8_t sreg;
 
     sreg = SREG;
@@ -1221,7 +1231,6 @@ SERVICE *Service_Init()
 
     if(service_count >= MAXSERVICE)
     {
-        // We could add an OS error here. 
         return NULL;
     }
 
@@ -1234,7 +1243,7 @@ SERVICE *Service_Init()
 }
 
 /* 
- * Subscribe to a service
+ * @brief Subscribe to a service
  */
 void Service_Subscribe(SERVICE *s, int16_t *v)
 {
@@ -1253,7 +1262,7 @@ void Service_Subscribe(SERVICE *s, int16_t *v)
 }
 
 /*
- * Publish a notification to a service
+ * @brief Publish a notification to a service
  */
 void Service_Publish(SERVICE *s, int16_t v)
 {
