@@ -1214,7 +1214,7 @@ uint16_t Now()
 
     sreg = SREG;
 	Disable_Interrupt();
-	uint16_t now = (clock * 5) + (uint16_t) ((OCR1A - TCNT1) / MS_CYCLES);
+	uint16_t now = (clock * TICK) + (TICK - (uint16_t) ((OCR1A - TCNT1) / MS_CYCLES));
 	SREG = sreg;
 	return now;	
 }
