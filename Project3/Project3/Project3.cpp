@@ -7,18 +7,27 @@
 #include "OS/os.h"
 #include "roomba/roomba.h"
 #include "roomba/roomba_sci.h"
+#include "roomba/sensor_struct.h"
+#include "irobot/irobot.hpp"
+#include "arduino_config.h"
 
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 41
 
-volatile uint8_t m_id_buffer[] = {1,0,1,0,0,0,0,0,1};
+volatile uint8_t m_id_buffer[] = {0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0};
 volatile int m_bits_to_send = 0;
 
 uint64_t m_last_range;
 
+irobot m_robot(&Serial1, 5);
+
+/*
+ We 
+
+*/
 void sonar_fire(void) {
 	
 	// If this is interrupted, the range will be incorrect
@@ -124,6 +133,7 @@ void sonar_fire(void) {
 // See p. 101 for interrupts. Triggered when 500 us timer goes off
 ISR(TIMER3_COMPA_vect)
 {
+	OCR5C = 210;
 	if(m_bits_to_send > 0)
 	{
 		OCR5C = m_id_buffer[BUFFER_SIZE - m_bits_to_send] == 1 ? 105 : 0; // 421 * 25%
@@ -134,6 +144,49 @@ ISR(TIMER3_COMPA_vect)
 		OCR5C = 0;
 	}
 }
+
+void ir_scan(void) {
+	for(;;)
+	{
+		
+		DDRB |= _BV(7);
+		
+		if(m_bits_to_send == 0) {
+			
+			m_bits_to_send = BUFFER_SIZE;
+		}
+		
+	
+		m_robot.send(irobot::op_sensor, irobot::sense_infrared_omni);
+
+	  	   
+		
+		uint8_t c = 0;
+		m_robot.receive(&c, 1);
+		
+		
+		Serial.begin(9600);
+		
+	
+		if(c < 128) {
+			Serial.write("lesser");
+		}
+		
+		if(c >= 128)
+		{
+			Serial.write("Greater");
+		}
+		
+		if(c == 255) {
+			Serial.write("Got it");
+			
+			
+		}
+		
+		Task_Next();
+	}
+}
+
 
 int r_main(void)
 {
@@ -150,8 +203,8 @@ int r_main(void)
 	// No Prescalar
 	TCCR3B |= (1<<CS30);
 	
-	// Set TOP value (0.0005 seconds)
-	OCR3A = 8000;
+	// Set TOP value (0.001 seconds)
+	OCR3A = 16000;
 	
 	// Enable interupt for when OCR3A matches TCNT3 (Timer register)
 	TIMSK3 |= (1<<OCIE3A);
@@ -180,8 +233,11 @@ int r_main(void)
 	OCR5A = 421;  // 38 KHz (Top value)
 	OCR5C = 0;  // Target
 	
+	m_robot.begin();
 	
-	Task_Create_Periodic(sonar_fire, 0, 100, 100, 400);
+	//Task_Create_Periodic(sonar_fire, 0, 100, 100, 400);
+	Task_Create_Periodic(ir_scan, 0, 500, 100, 400);
+	
 	Task_Terminate();
 	return 0;
 }

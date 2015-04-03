@@ -12,6 +12,7 @@
 #include "kernel.h"
 #include "os.h"
 #include "error_code.h"
+#include "../Arduino/Arduino.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -931,7 +932,7 @@ static void kernel_slow_clock(void)
  * Point of entry from the C runtime crt0.S.
  */
 void OS_Init()
-{
+{	
     int i;
 
     /* Set up the clocks */
@@ -1285,6 +1286,9 @@ void Service_Publish(SERVICE *s, int16_t v)
  */
 int main()
 {	
+	init();
+	Disable_Interrupt();
+		
 	OS_Init();
 	return 0;
 }
