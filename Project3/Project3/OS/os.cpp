@@ -670,10 +670,6 @@ static void enter_kernel(void)
  */
 void TIMER1_COMPA_vect(void)
 {
-		DDRB |= _BV(6);
-		
-		PORTB |= _BV(6);
-		PORTB &= ~_BV(6);
     /*
      * Save the interrupted task's context on its stack,
      * and save the stack pointer.
