@@ -13,6 +13,8 @@
 volatile uint8_t m_id_buffer[] = {0, 1,0,0,0, 1,1,1,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,1,1,0, 1,1,1,0, 0,0,0,0};
 	
 volatile int m_bits_to_send = 0;
+volatile int m_burst = 0;
+
 
 void IRInit() {
 	
@@ -55,12 +57,14 @@ void IRInit() {
 	OCR5C = 0;  // Target
 	
 	m_bits_to_send = 0;
+	m_burst = 0;
 }
 
 void IRFire() {
 	
-	if(m_bits_to_send == 0)
+	if(m_bits_to_send == 0 && m_burst == 0)
 	{
+		m_burst = 10;
 		m_bits_to_send = BUFFER_SIZE;
 		TIMSK3 |= (1<<OCIE3A);
 	}
@@ -75,8 +79,19 @@ ISR(TIMER3_COMPA_vect)
 	}
 	else
 	{
+		
 		OCR5C = 0;
-		TIMSK3 &= ~(1<<OCIE3A);		
+		if(m_burst > 0) {
+			m_bits_to_send = BUFFER_SIZE;
+			m_burst--;
+		}
+		else
+		{
+			
+		TIMSK3 &= ~(1<<OCIE3A);	
+		}
+		
+			
 	}
 }
 

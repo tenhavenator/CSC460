@@ -135,7 +135,12 @@ void ir_scan(void) {
 		
 		char car = (char) c;
 		
+		Serial.write("Hel");
+		
 		Serial.write(car);
+		Serial.write("lo");
+		
+		
 	}
 }
 
@@ -147,18 +152,56 @@ void ir_fire() {
 	}
 }
 
+void bump_scan() {
+	for(;;) {
+		
+		    IRFire();
+			m_robot.send(irobot::op_sensor, irobot::sense_infrared_omni);
+			
+			uint8_t c = 0;
+			
+			m_robot.receive(&c, 1);
+			Serial.write("hELLO ");
+			
+			
+			if(c != 0) {
+				Serial.print("Got something ");
+				
+				
+			}
+			
+			/*int i = 0;
+			for(i = 0; i < 6; i++) 
+			{
+				
+				int val = (int)(c & 0x1);
+				
+				c = c >> 1;
+			}
+			*/
+			Serial.println("");
+			
+			
+		
+		Task_Next();
+	}
+	
+	
+	
+}
+
 
 int r_main(void)
-{	
+{			
+	IRInit();
+	m_robot.begin();
 	
-	//IRInit();
-	//m_robot.begin();
-	
-	//Serial.begin(9600);
+	Serial.begin(9600);
 	
 	//Task_Create_Periodic(sonar_fire, 0, 100, 100, 400);
-	//Task_Create_Periodic(ir_fire, 0, 200, 20, 400);
-	//Task_Create_RR(ir_scan, 0);
+	Task_Create_Periodic(ir_fire, 0, 200, 20, 400);
+	Task_Create_RR(ir_scan, 0);
+	//Task_Create_Periodic(bump_scan, 0, 200, 200, 400);
 	
 	
 	Task_Terminate();
