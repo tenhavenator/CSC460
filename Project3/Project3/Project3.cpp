@@ -121,31 +121,31 @@ void ir_scan(void) {
 	for(;;)
 	{
 				
-		//DDRB |= _BV(6);
-			
-		/*IRFire();
+		DDRB |= _BV(6);
+
 		
 		m_robot.send(irobot::op_sensor, irobot::sense_infrared_omni);
 				
-		uint8_t c = 0;*/
+		uint8_t c = 0;
 		
-		//PORTB |= _BV(6);
-		//PORTB &= ~_BV(6);
-		/*m_robot.receive(&c, 1);
-		/
+		m_robot.receive(&c, 1);
+		
 		PORTB |= _BV(6);
 		PORTB &= ~_BV(6);
 		
-	
-		if(c == 255) {
-			Serial.write("Got it");
-		}*/
+		char car = (char) c;
 		
-		Task_Next();
+		Serial.write(car);
 	}
 }
 
-
+void ir_fire() {
+	
+	for(;;) {
+		IRFire();
+		Task_Next();
+	}
+}
 
 
 int r_main(void)
@@ -157,7 +157,9 @@ int r_main(void)
 	//Serial.begin(9600);
 	
 	//Task_Create_Periodic(sonar_fire, 0, 100, 100, 400);
-	//Task_Create_Periodic(ir_scan, 0, 20, 20, 400);
+	//Task_Create_Periodic(ir_fire, 0, 200, 20, 400);
+	//Task_Create_RR(ir_scan, 0);
+	
 	
 	Task_Terminate();
 	return 0;
