@@ -13,6 +13,8 @@
 #include "os.h"
 #include "error_code.h"
 
+#include "../Arduino/Arduino.h"
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -668,7 +670,6 @@ static void enter_kernel(void)
  */
 void TIMER1_COMPA_vect(void)
 {
-	//PORTB ^= _BV(PB7);		// Arduino LED
     /*
      * Save the interrupted task's context on its stack,
      * and save the stack pointer.
@@ -932,12 +933,9 @@ static void kernel_slow_clock(void)
  */
 void OS_Init()
 {
+	Disable_Interrupt();
+		
     int i;
-
-    /* Set up the clocks */
-
-	// Pre-scalar set to 8 
-    TCCR1B |= (_BV(CS11));
 
 #ifdef SLOW_CLOCK
     kernel_slow_clock();
@@ -972,12 +970,18 @@ void OS_Init()
     cur_task->state = RUNNING;
     dequeue(&system_queue);
 
-    /* Set up Timer 1 Output Compare interrupt,the TICK clock. */
-	// 
-    TIMSK1 |= _BV(OCIE1A);
+    /* Set up Timer 1 Output Compare interrupt,the TICK clock. */    
+	TCCR1A = 0;
+	TCCR1B = 0;
+	TIMSK1 = 0;
+	
     OCR1A = TCNT1 + TICK_CYCLES;
-    /* Clear flag. */
+	// Pre-scalar set to 8
+	TCCR1B |= (_BV(CS11));
+	
+	 /* Clear flag. */
     TIFR1 = _BV(OCF1A);
+	TIMSK1 |= _BV(OCIE1A);
 
     clock = 0;
     service_count = 0;
@@ -1285,6 +1289,9 @@ void Service_Publish(SERVICE *s, int16_t v)
  */
 int main()
 {	
+	init();
+	//Disable_Interrupt();
+		
 	OS_Init();
 	return 0;
 }

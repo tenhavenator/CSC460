@@ -66,7 +66,7 @@ void Roomba_UpdateSensorPacket(ROOMBA_SENSOR_GROUP group, roomba_sensor_data_t* 
 		sensor_packet->dirt_right = uart_get_byte(9);
 		break;
 	case CHASSIS:
-		// chassis sensors
+		// chassis sensors;
 		while (uart_bytes_received() != 6);
 		sensor_packet->remote_opcode = uart_get_byte(0);
 		sensor_packet->buttons = uart_get_byte(1);
