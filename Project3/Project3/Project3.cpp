@@ -10,7 +10,10 @@
 #include "roomba/sensor_struct.h"
 #include "irobot/irobot.hpp"
 #include "arduino_config.h"
+
 #include "IR/IRTransmit.h"
+#include "Sonar/sonar.h"
+#include "Sensors/sensor.h"
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -20,128 +23,148 @@ uint64_t m_last_range;
 
 irobot m_robot(&Serial1, 5);
 
+#define TURN_90_DEGREES_MS 1770
 
-void sonar_fire(void) {
-	
-	// If this is interrupted, the range will be incorrect
-	
+void sonar_ping(void) {
+		
 	for(;;) {
 		
-		// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
-		// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
-	
-		DDRB = DDRB | _BV(6);
-		PORTB = PORTB & ~_BV(6);
-		_delay_us(2);
-		PORTB = PORTB |_BV(6);
-		_delay_us(5);
-		PORTB = PORTB & ~_BV(6);
-
-		// The same pin is used to read the signal from the PING))): a HIGH
-		// pulse whose duration is the time (in microseconds) from the sending
-		// of the ping to the reception of its echo off of an object.
-	
-		//pinMode(pingPin, INPUT);
-		DDRB = DDRB & ~_BV(6);
-		//duration = pulseIn(pingPin, HIGH);
-	
-		// Code taken from arduino
-		uint8_t bit = _BV(6);
-		unsigned long width = 0; 
-		
-		// Figure out what an actual good value would be
-		// The 16 cycles is provbably lower without the extra instructions here
-		unsigned long timeout = 100000;
-	
-		// the initial loop; it takes 16 clock cycles per iteration.
-		unsigned long numloops = 0;
-		// Convert this to real loop value
-		unsigned long maxloops = timeout;
-	
-		// wait for any previous pulse to end
-		while ((PINB & bit) == bit)
-		{
-			if (numloops++ >= maxloops)
-			{
-				break;
-			}
-		}
-	
-		// wait for the pulse to start
-		while ((PINB & bit) != bit)
-		{
-			if (numloops++ >= maxloops)
-			{
-				break;
-			}
-		}
-	
-		// wait for the pulse to stop
-		while (((PINB & bit)  & bit) == bit) {
-			if (numloops++ >= maxloops)
-			{
-				break;;
-			}
-			width++;
-		}
-		
-		// convert the reading to microseconds. The loop has been determined
-		// to be 20 clock cycles long and have about 16 clocks between the edge
-		// and the start of the loop. There will be some error introduced by
-		// the interrupt handlers.
-		
-		// The speed of sound is 340 m/s or 29 microseconds per centimeter.
-		// The ping travels out and back, so to find the distance of the
-		// object we take half of the distance travelled.
-		
-		// This equaltion seems to produce almost perfect results. 
-		
-		if(numloops < maxloops)
-		{
-			m_last_range = (width * 21 + 16) / ((F_CPU / 1000000L) * 29 * 2);
-				
-			// We might want to consider putting this in a system task so that firing is never pre-empted.
-			DDRB = DDRB | _BV(7);
-			if(m_last_range <=100)
-			{
-				// Target detected within 100cm. Fire IR
-				PORTB = PORTB | _BV(7);
-			}
-			else
-			{
-				PORTB = PORTB & ~_BV(7);
-			}
-		}
-		
+		SonarPing();
 		Task_Next();	
 	}
 }
 
 void ir_scan(void) {
 	for(;;)
-	{
-				
-		DDRB |= _BV(6);
-
-		
+	{		
 		m_robot.send(irobot::op_sensor, irobot::sense_infrared_omni);
 				
 		uint8_t c = 0;
 		
 		m_robot.receive(&c, 1);
 		
-		PORTB |= _BV(6);
-		PORTB &= ~_BV(6);
-		
-		char car = (char) c;
-		
-		Serial.write("Hel");
-		
-		Serial.write(car);
-		Serial.write("lo");
-		
+	    // Check for the ID and send a radio packet
 		
 	}
+}
+
+void drive(int16_t velocity)
+{
+	uint8_t send_bytes[4];
+	send_bytes[0] = (velocity >> 8) & 0xFF;
+	send_bytes[1] = velocity & 0xFF;
+	send_bytes[2] = 0x80;
+	send_bytes[3] = 0x00;
+	m_robot.send(irobot::op_drive, send_bytes, 4);	
+}
+
+void spin(int16_t angle, bool cw)
+{
+	uint8_t send_bytes[4];
+	int16_t velocity = -100;
+	if (cw) {
+		velocity = 100;
+	}
+	
+	send_bytes[0] = (velocity >> 8) & 0xFF;
+	send_bytes[1] = velocity & 0xFF;
+	send_bytes[2] = 0;
+	send_bytes[3] = 1;
+	m_robot.send(irobot::op_drive, send_bytes, 4);
+}
+
+void spin_90_CW()
+{
+	uint8_t send_bytes[4];
+	int16_t velocity = -100;
+	if (cw) {
+		velocity = 100;
+	}
+	
+	send_bytes[0] = (velocity >> 8) & 0xFF;
+	send_bytes[1] = velocity & 0xFF;
+	send_bytes[2] = 0;
+	send_bytes[3] = 1;
+	m_robot.send(irobot::op_drive, send_bytes, 4);
+}
+
+void spin_90_CCW()
+{
+	uint8_t send_bytes[4];
+	int16_t velocity = -100;
+	if (cw) {
+		velocity = 100;
+	}
+	
+	send_bytes[0] = (velocity >> 8) & 0xFF;
+	send_bytes[1] = velocity & 0xFF;
+	send_bytes[2] = 0;
+	send_bytes[3] = 1;
+	m_robot.send(irobot::op_drive, send_bytes, 4);
+}
+
+uint16_t convert(uint8_t * light) {
+	uint16_t high = light[0];
+	uint16_t low = light[1];
+	
+	return (high << 8) | low;
+}
+
+void bump_scan() {
+	for(;;) {
+			
+		SensorData data = SensorPoll();
+		
+		/*Serial.write("DATA: ");
+		Serial.print(data.bumper_right, DEC);
+		Serial.print(" ");
+		Serial.print(data.bumper_left, DEC);
+		Serial.print(" ");
+		
+		Serial.print(data.light_left, DEC);
+		Serial.print(" ");
+		/*Serial.print(data.light_front_left[0], DEC);
+		Serial.print(data.light_front_left[1], DEC);
+		Serial.print(" ");*/
+		/*Serial.print(data.light_center_left[0], DEC);
+		Serial.print(data.light_center_left[1], DEC);
+		Serial.print(" ");
+		
+		Serial.print(data.light_center_right[0], DEC);
+		Serial.print(data.light_center_right[1], DEC);
+		Serial.print(" ");
+		
+		/*Serial.print(data.light_front_right[0], DEC);
+		Serial.print(data.light_front_right[1], DEC);
+		Serial.print(" ");
+		
+		Serial.print(data.light_right[0], DEC);
+		Serial.print(data.light_right[1], DEC);
+		Serial.print(" ");
+		
+		
+		Serial.println("");
+		//Serial.write((char)data.bumper_left, BIN);*/
+		
+		if(data.bumper_right == 1)
+		{
+			drive(0);
+		}
+		else if(data.bumper_left == 1)
+		{
+			drive(0);
+		}
+		else if(convert(data.light_center_left) > 100) {
+			drive(0);
+		}
+		else if(convert(data.light_center_right) > 100) {
+			drive(0);
+		}
+		else {
+			drive(200);
+		}
+		Task_Next();
+	}	
 }
 
 void ir_fire() {
@@ -152,56 +175,56 @@ void ir_fire() {
 	}
 }
 
-void bump_scan() {
+void check_spin() {
+	int rotated = 0;
 	for(;;) {
+		int16_t angle = GetAngle();
+		rotated += angle;
+		if (rotated > 360) {
+			drive(0);
+		}
 		
-		    IRFire();
-			m_robot.send(irobot::op_sensor, irobot::sense_infrared_omni);
-			
-			uint8_t c = 0;
-			
-			m_robot.receive(&c, 1);
-			Serial.write("hELLO ");
-			
-			
-			if(c != 0) {
-				Serial.print("Got something ");
-				
-				
-			}
-			
-			/*int i = 0;
-			for(i = 0; i < 6; i++) 
-			{
-				
-				int val = (int)(c & 0x1);
-				
-				c = c >> 1;
-			}
-			*/
-			Serial.println("");
-			
-			
 		
 		Task_Next();
 	}
-	
-	
-	
 }
-
 
 int r_main(void)
 {			
-	IRInit();
+	//IRInit();
 	m_robot.begin();
 	
 	Serial.begin(9600);
 	
+	m_robot.send(irobot::op_full_mode);
+	
 	//Task_Create_Periodic(sonar_fire, 0, 100, 100, 400);
-	Task_Create_Periodic(ir_fire, 0, 200, 20, 400);
-	Task_Create_RR(ir_scan, 0);
-	//Task_Create_Periodic(bump_scan, 0, 200, 200, 400);
+	//Task_Create_Periodic(ir_fire, 0, 200, 20, 400);
+	//Task_Create_RR(ir_scan, 0);
+	SensorInit(&m_robot);
+	
+	//Task_Create_Periodic(bump_scan, 0,20,15, 400);
+	
+	drive(0);
+	
+	//Task_Create_Periodic(check_spin, 0, 100, 45, 400);
+	
+	//for (;;) {
+		spin(2, true);
+		_delay_ms(64000);
+		drive(0);
+		//_delay_ms(500);
+		
+	
+	
+	
+	/*for(;;) {
+		drive_straight(300);
+		_delay_ms(1000);
+		drive_straight(0);
+		_delay_ms(1000);
+		
+	}*/
 	
 	
 	Task_Terminate();

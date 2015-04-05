@@ -64,7 +64,7 @@ void IRFire() {
 	
 	if(m_bits_to_send == 0 && m_burst == 0)
 	{
-		m_burst = 10;
+		m_burst = 1;
 		m_bits_to_send = BUFFER_SIZE;
 		TIMSK3 |= (1<<OCIE3A);
 	}
@@ -87,8 +87,7 @@ ISR(TIMER3_COMPA_vect)
 		}
 		else
 		{
-			
-		TIMSK3 &= ~(1<<OCIE3A);	
+			TIMSK3 &= ~(1<<OCIE3A);	
 		}
 		
 			

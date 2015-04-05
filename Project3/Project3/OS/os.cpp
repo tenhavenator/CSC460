@@ -1290,7 +1290,6 @@ void Service_Publish(SERVICE *s, int16_t v)
 int main()
 {	
 	init();
-	//Disable_Interrupt();
 		
 	OS_Init();
 	return 0;
