@@ -14,13 +14,9 @@ void SensorInit(irobot * robot) {
 	m_robot = robot;
 }
 
-int16_t GetAngle() {
-	uint8_t angle_data[2];
-	m_robot->send(irobot::op_sensor, irobot::sense_angle);
-	m_robot->receive(angle_data, 2);
-	
-	uint16_t high = angle_data[0];
-	uint16_t low = angle_data[1];
+uint16_t convert(uint8_t * light) {
+	uint16_t high = light[0];
+	uint16_t low = light[1];
 	
 	return (high << 8) | low;
 }
@@ -49,6 +45,9 @@ SensorData SensorPoll() {
 	 m_robot->receive(&bumper_values, 1);
 	 sensor_data.bumper_right = bumper_values &0x1;
 	 sensor_data.bumper_left = (bumper_values >> 1) &0x1;
+	 sensor_data.wheel_drop_right = (bumper_values >> 2) &0x1;
+	 sensor_data.wheel_drop_left = (bumper_values >> 3) &0x1;
+	 
 	 
 	
 	 m_robot->receive(sensor_data.light_left, 2);

@@ -1,11 +1,11 @@
 #include <ServoT4.h>
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 36
 #define SWITCH_PIN 4
 
 volatile int mNumSendBits = 0;
 volatile int mBitBuffer[BUFFER_SIZE];
-volatile byte mBytes[] = {B01000001, B01000010, B01000011, B01000100}; // A, B, C, D
+volatile int bitBuffer[] = {0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0};
 volatile int mByteIndex = 0;
 
 ServoT4 mServo;
@@ -13,7 +13,7 @@ ServoT4 mServo;
 // Takes a byte and sets the bit buffer 
 void setBitBuffer(byte pByte)
 {
-  mBitBuffer[0] = 1;
+  mBitBuffer[0] = 0;
   mBitBuffer[1] = 0;
   for(int i = 2; i < BUFFER_SIZE; i++)
   {
@@ -48,7 +48,7 @@ void setup()
   TCCR3B |= (1<<CS30);
   
   // Set TOP value (0.0005 seconds)
-  OCR3A = 8000;
+  OCR3A = 16000;
   
   // Enable interupt for when OCR3A matches TCNT3 (Timer register)
   TIMSK3 |= (1<<OCIE3A);
@@ -81,7 +81,7 @@ ISR(TIMER3_COMPA_vect)
 {
   if(mNumSendBits > 0)
   {
-    OCR1C = mBitBuffer[BUFFER_SIZE - mNumSendBits] == 1 ? 105 : 0; // 421 * 25%
+    OCR1C = bitBuffer[BUFFER_SIZE - mNumSendBits] == 1 ? 105 : 0; // 421 * 25%
     mNumSendBits--;
   }
   else
@@ -91,25 +91,10 @@ ISR(TIMER3_COMPA_vect)
 }
 
 void loop() 
-{     
-
-  int stickPos = analogRead(A0);
-  stickPos = map(stickPos, 0, 1023, 0, 180);
-  mServo.write(stickPos);
-  
-  if(digitalRead(SWITCH_PIN) == LOW)
+{       
+   if(mNumSendBits == 0)
   {
-     if(mNumSendBits == 0)
-    {
-      setBitBuffer(mBytes[mByteIndex]);
-      mNumSendBits = BUFFER_SIZE;
-      mByteIndex = mByteIndex == 3 ? 0 : mByteIndex + 1;
-      
-    }
-    
-    while(digitalRead(SWITCH_PIN) == LOW)
-    {     
-      // Nothing
-    }
+    mNumSendBits = BUFFER_SIZE;    
   }
+    
 }

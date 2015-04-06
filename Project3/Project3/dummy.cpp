@@ -63,18 +63,7 @@ int p_main()
 	
 	pspin(2, true);
 	
-	int rotated = 0;
-	for(;;) {
-		int16_t angle = GetAngle();
-		rotated += angle;
-		if (rotated >= 360) {
-			pdrive(0);
-		}
-		
-		
-		_delay_ms(100);
-	}
-
+	
     /*for(;;)
     {
         g_robot.send(irobot::op_sensor, irobot::sense_bumps_and_wheel_drops);

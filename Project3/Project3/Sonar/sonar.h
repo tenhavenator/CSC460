@@ -9,8 +9,7 @@
 #ifndef SONAR_H_
 #define SONAR_H_
 
-void SonarInit();
-void SonarPing();
+uint16_t SonarFire(int timeout_ticks, int port);
 
 
 #endif /* SONAR_H_ */

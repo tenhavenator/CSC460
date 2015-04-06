@@ -8,36 +8,33 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "../OS/os.h"
+#include <Arduino.h>
 
-SERVICE * m_sonar_service;
-
-void SonarInit() {
-	
-	m_sonar_service = Service_Init();	
-}
-
-void SonarFire(int timeout_ticks) {
+uint16_t SonarFire(int timeout_ticks, int pin) {
 	
 		// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
 		// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
 		
-		DDRB = DDRB | _BV(6);
-		PORTB = PORTB & ~_BV(6);
+		pinMode(pin, OUTPUT);
+		digitalWrite(pin, LOW);
 		_delay_us(2);
-		PORTB = PORTB |_BV(6);
+		digitalWrite(pin, HIGH);
 		_delay_us(5);
-		PORTB = PORTB & ~_BV(6);
-
+		digitalWrite(pin, LOW);
+				
 		// The same pin is used to read the signal from the PING))): a HIGH
 		// pulse whose duration is the time (in microseconds) from the sending
 		// of the ping to the reception of its echo off of an object.
 		
-		//pinMode(pingPin, INPUT);
-		DDRB = DDRB & ~_BV(6);
-		//duration = pulseIn(pingPin, HIGH);
+		pinMode(pin, INPUT);
 		
-		// Code taken from arduino
-		uint8_t bit = _BV(6);
+		// Code taken from arduino		
+		//uint8_t bit = _BV(6);
+		//uint8_t bit = digitalPinToBitMask(pin);
+		
+		uint8_t bit = digitalPinToBitMask(pin);
+		uint8_t port = digitalPinToPort(pin);
+		uint8_t stateMask = bit;
 		unsigned long width = 0;
 		
 		// ADD the real timeout here
@@ -46,40 +43,29 @@ void SonarFire(int timeout_ticks) {
 		//##################################################################################
 		
 		// The 16 cycles is provbably lower without the extra instructions here
-		unsigned long timeout = 100000;
+		unsigned long timeout = 20000;
 		
 		// the initial loop; it takes 16 clock cycles per iteration.
 		unsigned long numloops = 0;
 		// Convert this to real loop value
-		unsigned long maxloops = timeout;
+		unsigned long maxloops = microsecondsToClockCycles(timeout) / 16;
 		
 		// wait for any previous pulse to end
-		while ((PINB & bit) == bit)
-		{
-			if (numloops++ >= maxloops)
-			{
+		while ((*portInputRegister(port) & bit) == stateMask)
+			if (numloops++ == maxloops)
 				break;
-			}
-		}
-		
+	
 		// wait for the pulse to start
-		while ((PINB & bit) != bit)
-		{
-			if (numloops++ >= maxloops)
-			{
+		while ((*portInputRegister(port) & bit) != stateMask)
+			if (numloops++ == maxloops)
 				break;
-			}
-		}
-		
+	
 		// wait for the pulse to stop
-		while (((PINB & bit)  & bit) == bit) {
-			if (numloops++ >= maxloops)
-			{
-				break;;
-			}
+		while ((*portInputRegister(port) & bit) == stateMask) {
+			if (numloops++ == maxloops)
+				break;
 			width++;
 		}
-		
 		// convert the reading to microseconds. The loop has been determined
 		// to be 20 clock cycles long and have about 16 clocks between the edge
 		// and the start of the loop. There will be some error introduced by
@@ -93,8 +79,11 @@ void SonarFire(int timeout_ticks) {
 		
 		if(numloops < maxloops)
 		{
-			int range = (width * 21 + 16) / ((F_CPU / 1000000L) * 29 * 2);
-			
-			// Do something with the service
+			int range = (width * 34 + 16) / ((F_CPU / 1000000L) * 29 * 2);
+			//int range = clockCyclesToMicroseconds(width * 21 + 16) / (29 * 2); 
+			return range;
 		}
+		
+		
+		return 0;
 }

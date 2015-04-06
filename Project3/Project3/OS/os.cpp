@@ -406,7 +406,6 @@ static void kernel_handle_request(void)
          serv->retvals[serv->subscribers_count] = kernel_request_service_args.retval;
          serv->subscribers[serv->subscribers_count] = cur_task;
          serv->subscribers_count++;
-		   
          cur_task->state = WAITING;  
     }
 		
@@ -416,6 +415,7 @@ static void kernel_handle_request(void)
 	  {
            SERVICE* serv = kernel_request_service_args.service;
            int i;
+	   
            for(i = 0; i < serv->subscribers_count; i++)
            {
                *(serv->retvals[i]) = *(kernel_request_service_args.retval);
@@ -1241,8 +1241,7 @@ SERVICE *Service_Init()
     services[service_count].subscribers_count = 0;
     service_count ++;
 
-    SREG = sreg;	
-	
+    SREG = sreg;
     return &services[service_count - 1];
 }
 
@@ -1252,7 +1251,7 @@ SERVICE *Service_Init()
 void Service_Subscribe(SERVICE *s, int16_t *v)
 {
     uint8_t sreg;
-
+	
     sreg = SREG;
     Disable_Interrupt();
 
@@ -1271,7 +1270,7 @@ void Service_Subscribe(SERVICE *s, int16_t *v)
 void Service_Publish(SERVICE *s, int16_t v)
 {
     uint8_t sreg;
-
+	
     sreg = SREG;
     Disable_Interrupt();
 	
