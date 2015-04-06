@@ -23,6 +23,16 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
+#define TEAM1_ID 100
+#define TEAM3_ID 65
+#define TEAM4_ID 66
+
+#define IR_RESPAWN 5000
+
+static uint16_t last_shot_by_team1;
+static uint16_t last_shot_by_team3;
+static uint16_t last_shot_by_team4;
+
 uint64_t m_last_range;
 
 irobot m_robot(&Serial1, ROBOT_DD_PIN);
@@ -92,44 +102,66 @@ void bump_scan() {
 		
 		Serial.println("");
 		//Serial.write((char)data.bumper_left, BIN);*/
+			
+		// Check if we can be shot by team one
+		uint16_t now = Now();
 		
-		/*
-		if(data.bumper_right == 1)
+		if(now - last_shot_by_team1 > IR_RESPAWN) {
+			if(data.infrared_omni == TEAM1_ID) {
+				// send radio packet
+				last_shot_by_team1 = now;
+			}
+			else {
+				 last_shot_by_team1 = now - IR_RESPAWN;
+			}
+		}
+		
+		// Check if we can be shot by team three
+		if(now - last_shot_by_team3 > IR_RESPAWN) {
+			if(data.infrared_omni == TEAM3_ID) {
+				// send radio packet
+				last_shot_by_team3 = now;
+			}
+			else {
+				last_shot_by_team3 = now - IR_RESPAWN;
+			}
+		}
+		
+		
+		// Check if we can be shot by team four
+		if(now - last_shot_by_team4 > IR_RESPAWN) {
+			if(data.infrared_omni == TEAM4_ID) {
+				// send radio packet
+				last_shot_by_team4 = now;
+			}
+		
+			else {
+				last_shot_by_team4 = now - IR_RESPAWN;
+			}
+		}
+	
+		// Turn the light on if we shoot ourselves
+		pinMode(3, OUTPUT);
+		if(data.infrared_omni == 67) {
+				
+			digitalWrite(3, HIGH);
+		}
+		else
 		{
-			drive(0);
+			digitalWrite(3, LOW);
 		}
-		else if(data.bumper_left == 1)
-		{
-			drive(0);
-		}
-		else if(convert(data.light_center_left) > 100) {
-			drive(0);
-		}
-		else if(convert(data.light_center_right) > 100) {
-			drive(0);
-		}
-		else {
-			drive(200);
-		}*/
 		
 		if ((data.wheel_drop_left == 1)||(data.wheel_drop_right == 1)) {
 			kill_robot();
 		}
 		
 		if ((data.bumper_right == 1)||(data.bumper_left == 1)||(convert(data.light_center_left) > 100)||(convert(data.light_center_right) > 100)) {
+			IRFire();
 			Service_Publish(drive_state_service, DRIVE_BACKWARDS);
 		}
-		
+			 
 		Task_Next();
 	}	
-}
-
-void ir_fire() {
-	
-	for(;;) {
-		IRFire();
-		Task_Next();
-	}
 }
 
 ISR(TIMER4_COMPA_vect)
@@ -242,7 +274,7 @@ void drive_robot() {
 void check_sonar() {
 	
 	for (;;) {
-		// Left (from roomba's perspective) is pin 48, middle pin 49, right pin 50
+		
 		uint16_t range = SonarFire(100, SONAR_SIGNAL_PIN);
 			
 		pinMode(2, OUTPUT);
@@ -250,6 +282,7 @@ void check_sonar() {
 		// check if going forwards, if so, make it go forwards forever (extend timer)		
 		if ((range > 10)&&(range < 100)) {
 			digitalWrite(2, HIGH);
+			IRFire();
 			if(drive_state == DRIVE_FORWARDS) {
 				TCNT4 = 0;
 			}

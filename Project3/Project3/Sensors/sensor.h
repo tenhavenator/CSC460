@@ -20,7 +20,7 @@ typedef struct {
 	uint8_t light_front_left[2];
 	uint8_t light_right[2];
 	uint8_t light_left[2];
-	uint8_t infrared_omni[2];
+	uint8_t infrared_omni;
 } SensorData;
 
 void SensorInit(irobot * robot);
