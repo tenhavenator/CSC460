@@ -3,9 +3,6 @@
  *
  * Roomba control
  */ 
-
-
-
 #include "OS/os.h"
 #include "roomba/roomba.h"
 #include "roomba/roomba_sci.h"
