@@ -9,6 +9,7 @@
 #define BUFFER_SIZE 37
 
 #include <avr/interrupt.h>
+#include "../irobot/irobot.hpp"
 
 volatile uint8_t m_id_buffer[] = {0, 1,0,0,0, 1,1,1,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,1,1,0, 1,1,1,0, 0,0,0,0};
 	
@@ -67,6 +68,20 @@ void IRFire() {
 		m_burst = 1;
 		m_bits_to_send = BUFFER_SIZE;
 		TIMSK3 |= (1<<OCIE3A);
+	}
+}
+
+void ir_scan(irobot * m_robot) {
+	for(;;)
+	{		
+		m_robot->send(irobot::op_sensor, irobot::sense_infrared_omni);
+				
+		uint8_t c = 0;
+		
+		m_robot->receive(&c, 1);
+		
+	    // Check for the ID and send a radio packet
+		
 	}
 }
 
