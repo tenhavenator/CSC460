@@ -13,7 +13,7 @@
 #define ROBOT_DD_PIN 5
 #define ERROR_LED_GREEN 42
 #define ERROR_LED_RED 43
-#define SONAR_SIGNAL_PIN 47
+#define SONAR_SIGNAL_PIN 45
 
 
 

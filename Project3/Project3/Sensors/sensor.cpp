@@ -58,7 +58,7 @@ SensorData SensorPoll() {
 	 m_robot->receive(sensor_data.light_center_right, 2);
 	 m_robot->receive(sensor_data.light_front_right, 2);
 	 m_robot->receive(sensor_data.light_right, 2);
-	 m_robot->receive(sensor_data.infrared_omni, 1);
+	 m_robot->receive(&sensor_data.infrared_omni, 1);
 	  
 	 
 	return sensor_data;
