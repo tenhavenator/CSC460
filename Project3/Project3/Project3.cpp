@@ -139,17 +139,6 @@ ISR(TIMER4_COMPA_vect)
 {
 	disable_drive_interrupt();
 	
-	// Change the drive state to the desired state
-	if (drive_state == DRIVE_FORWARDS) {
-		
-	} 
-	else if ((drive_state == DRIVE_TURN_CCW_90)||(drive_state == DRIVE_TURN_CW_90)) {
-		
-	}
-	else if (drive_state == DRIVE_BACKWARDS) {
-		
-	}
-	
 	int new_state = drive_state;
 	
 	// Choose new drive state based on current state
@@ -171,7 +160,7 @@ ISR(TIMER4_COMPA_vect)
 			break;
 		
 		case DRIVE_BACKWARDS:
-			new_state = DRIVE_TURN_CCW_180;
+			new_state = DRIVE_TURN_AROUND;
 			break;
 		
 		case DRIVE_TURN_CW_90:
@@ -182,11 +171,7 @@ ISR(TIMER4_COMPA_vect)
 			new_state = DRIVE_FORWARDS;
 			break;
 		
-		case DRIVE_TURN_CW_180:
-			new_state = DRIVE_FORWARDS;
-			break;
-		
-		case DRIVE_TURN_CCW_180:
+		case DRIVE_TURN_AROUND:
 			new_state = DRIVE_FORWARDS;
 			break;
 			
@@ -230,14 +215,16 @@ void drive_robot() {
 				enable_drive_interrupt(TURN_90_DEGREES_MS);
 				break;
 				
-			case DRIVE_TURN_CW_180:
-				spin(true);
-				enable_drive_interrupt(TURN_90_DEGREES_MS * 2);
-				break;
+			case DRIVE_TURN_AROUND:
 				
-			case DRIVE_TURN_CCW_180:
-				spin(false);
-				enable_drive_interrupt(TURN_90_DEGREES_MS * 2);
+				{
+					// Calculate a random number of ms between 0 and time it takes to go 90 degrees
+					// Then when turning around we go between 90 and 180 degrees total
+					int random_angle = rand() % 1770;
+				
+					spin(true);
+					enable_drive_interrupt(TURN_90_DEGREES_MS + random_angle);
+				}
 				break;
 				
 			default:
@@ -255,114 +242,25 @@ void drive_robot() {
 	}
 }
 
-void normalize() {
-	for (;;) {
-		
-		drive(0);
-		
-		// All three sonars detect something
-		if ((sonar_sensor_values[0])&&(sonar_sensor_values[1])&&(sonar_sensor_values[2])) {
-			// Don't do anything
-			//Serial.write("Stay");
-			//Serial.println();
-			Task_Next();
-		}
-		// "Left" sonar only
-		if ((sonar_sensor_values[0])&&(!sonar_sensor_values[1])&&(!sonar_sensor_values[2])) {
-			spin(false);
-			enable_drive_interrupt(TURN_8_DEGREES_MS);
-			//Serial.write("Spin CW FAST");
-			//Serial.println();
-			Task_Next();
-		}
-		// "Left" and "middle" sonars detect
-		if ((sonar_sensor_values[0])&&(sonar_sensor_values[1])&&(!sonar_sensor_values[2])) {
-			spin(false);
-			enable_drive_interrupt(TURN_4_DEGREES_MS);
-			//Serial.write("Spin CW SLOW");
-			//Serial.println();
-			Task_Next();
-		}
-		// "Middle" sonar only
-		if ((!sonar_sensor_values[0])&&(sonar_sensor_values[1])&&(!sonar_sensor_values[2])) {
-			// Don't do anything
-			//Serial.write("Stay");
-			//Serial.println();
-			Task_Next();
-		}
-		// "Middle" and "right" sonars detect
-		if ((!sonar_sensor_values[0])&&(sonar_sensor_values[1])&&(sonar_sensor_values[2])) {
-			spin(true);
-			enable_drive_interrupt(TURN_4_DEGREES_MS);
-			//Serial.write("Spin CCW SLOW");
-			//Serial.println();
-			Task_Next();
-		}
-		// "Right" sonar only
-		if ((!sonar_sensor_values[0])&&(!sonar_sensor_values[1])&&(sonar_sensor_values[2])) {
-			spin(true);
-			enable_drive_interrupt(TURN_8_DEGREES_MS);
-			//Serial.write("Spin CCW FAST");
-			//Serial.println();
-			Task_Next();
-		}
-		//Serial.write("Stay");
-		//Serial.println();
-		Task_Next();
-	}
-}
-
 void check_sonar() {
 	
 	for (;;) {
 		// Left (from roomba's perspective) is pin 48, middle pin 49, right pin 50
-		uint16_t range_left = SonarFire(100, SONAR1_SIGNAL_PIN);
-		uint16_t range_mid = SonarFire(100, SONAR2_SIGNAL_PIN);
-		uint16_t range_right = SonarFire(100, SONAR3_SIGNAL_PIN);
-		
-		//if ((range < 300) && (range != 0)) {
+		uint16_t range = SonarFire(100, SONAR_SIGNAL_PIN);
 			
-			
-		//} else {
-			
-		//}
-		
 		pinMode(2, OUTPUT);
-		pinMode(3, OUTPUT);
-		pinMode(4, OUTPUT);
 		
-		if ((range_left > 10)&&(range_left < 220)) {
+		// check if going forwards, if so, make it go forwards forever (extend timer)		
+		if ((range > 10)&&(range < 100)) {
 			digitalWrite(2, HIGH);
-			sonar_sensor_values[0] = 1;
+			if(drive_state == DRIVE_FORWARDS) {
+				TCNT4 = 0;
+			}
 		} else {
 			digitalWrite(2, LOW);
-			sonar_sensor_values[0] = 0;
 		}
 		
-		if ((range_mid > 10)&&(range_mid < 220)) {
-			digitalWrite(3, HIGH);
-			sonar_sensor_values[1] = 1;
-			} else {
-			digitalWrite(3, LOW);
-			sonar_sensor_values[1] = 0;
-		}
 		
-		if ((range_right > 10)&&(range_right < 220)) {
-			digitalWrite(4, HIGH);
-			sonar_sensor_values[2] = 1;
-			} else {
-			digitalWrite(4, LOW);
-			sonar_sensor_values[2] = 0;
-		}
-		
-		/*
-		Serial.print(range_left, DEC);
-		Serial.write(" ");
-		Serial.print(range_mid, DEC);
-		Serial.write(" ");
-		Serial.print(range_right, DEC);
-		Serial.println();
-		*/
 		Task_Next();
 	}
 }
@@ -391,10 +289,7 @@ void radio_init() {
 
 void radio_stuff() {
 	for(;;) {
-		
-		
-		
-		
+
 		radio_packet_t packet;
 		
 		packet.game_status.it_id = 0x45;
@@ -410,13 +305,8 @@ void radio_stuff() {
 		
 		Serial.print(status,DEC);
 		
-		
-		
-		
 		Task_Next();
 	}
-	
-	
 }
 
 int r_main(void)
@@ -431,20 +321,20 @@ int r_main(void)
 	//Serial.begin(9600);
 	
 	//radio_init();
-	m_robot.send(irobot::op_safe_mode);
-	//m_robot.send(irobot::op_full_mode);
+	//m_robot.send(irobot::op_safe_mode);
+	m_robot.send(irobot::op_full_mode);
 	
-	//SensorInit(&m_robot);
+	SensorInit(&m_robot);
 	
-	//drive_state_service = Service_Init();
+	drive_state_service = Service_Init();
 	
-	//drive_init(&m_robot);
+	drive_init(&m_robot);
 	
-	//Task_Create_Periodic(bump_scan, 0,20,15, 400);
+	Task_Create_Periodic(bump_scan, 0, 100, 40, 550);
 	
-	//Task_Create_System(drive_robot, 0);
+	Task_Create_System(drive_robot, 0);
 	
-	//Task_Create_Periodic(check_sonar, 0, 100, 40, 500);
+	Task_Create_Periodic(check_sonar, 0, 100, 40, 500);
 	//Task_Create_Periodic(normalize, 0, 100, 40, 550);
 	//Task_Create_Periodic(radio_stuff, 0, 200, 199, 150);
 	

@@ -43,7 +43,7 @@ uint16_t SonarFire(int timeout_ticks, int pin) {
 		//##################################################################################
 		
 		// The 16 cycles is provbably lower without the extra instructions here
-		unsigned long timeout = 200000;
+		unsigned long timeout = 20000;
 		
 		// the initial loop; it takes 16 clock cycles per iteration.
 		unsigned long numloops = 0;
