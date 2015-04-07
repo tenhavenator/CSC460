@@ -29,13 +29,14 @@ void drive_init(irobot * robot)
 	// Set TOP value 
 	OCR4A = 0;
 	
+	//Set timer 3 to 0 (optional here).
+	TCNT4 = 0;
+	
 	// Clear interrupt flag
 	TIFR4 = _BV(OCF4A);
 	
-	//Set timer 3 to 0 (optional here).
-	TCNT4 = 0;
-}
 
+}
 
 
 void drive(int16_t velocity)

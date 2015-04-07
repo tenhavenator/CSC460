@@ -21,6 +21,13 @@ uint16_t convert(uint8_t * light) {
 	return (high << 8) | low;
 }
 
+uint8_t IRPoll() {
+	uint8_t data;
+	m_robot->send(irobot::op_sensor,  irobot::sense_infrared_omni);
+	m_robot->receive(&data, 1);
+	return data;
+}
+
 SensorData SensorPoll() {
 	
 	// Jakob made this code
@@ -47,12 +54,8 @@ SensorData SensorPoll() {
 	 sensor_data.bumper_left = (bumper_values >> 1) &0x1;
 	 sensor_data.wheel_drop_right = (bumper_values >> 2) &0x1;
 	 sensor_data.wheel_drop_left = (bumper_values >> 3) &0x1;
-	 
-	 
-	
+
 	 m_robot->receive(sensor_data.light_left, 2);
-	 
-	 
 	 m_robot->receive(sensor_data.light_front_left, 2);
 	 m_robot->receive(sensor_data.light_center_left, 2);
 	 m_robot->receive(sensor_data.light_center_right, 2);
@@ -60,6 +63,5 @@ SensorData SensorPoll() {
 	 m_robot->receive(sensor_data.light_right, 2);
 	 m_robot->receive(&sensor_data.infrared_omni, 1);
 	  
-	 
 	return sensor_data;
 }

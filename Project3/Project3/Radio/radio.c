@@ -148,6 +148,7 @@ static void set_rx_mode()
 	}
 }
 
+
 /**
  * Switch the radio to transmit mode.  If the radio is already in transmit mode, this does nothing.
  */

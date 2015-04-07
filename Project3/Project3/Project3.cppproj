@@ -138,6 +138,9 @@
     <Compile Include="arduino_config.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="DriveTest.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="irobot\irobot.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -172,6 +175,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Project3.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="RadioTest.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Radio\nRF24L01.h">
