@@ -40,7 +40,7 @@
 #define IR_RESPAWN 5000
 
 static uint16_t last_shot_by_team1;
-static uint16_t last_shot_by_team3;
+static uint16_t last_shot_by_team2;
 static uint16_t last_shot_by_team4;
 
 irobot m_robot(&Serial1, ROBOT_DD_PIN);
@@ -386,7 +386,7 @@ int r_main(void)
 	// Set up shot timers so we can be shot by anyone
 	uint8_t now = Now();
 	last_shot_by_team1 = now - IR_RESPAWN;
-	last_shot_by_team3 = now - IR_RESPAWN;
+	last_shot_by_team2 = now - IR_RESPAWN;
 	last_shot_by_team4 = now - IR_RESPAWN;
 	
 	// Initialize drive and sonar services
@@ -400,15 +400,15 @@ int r_main(void)
 	// So that the first drive command doesn't come in too fast
 	_delay_ms(25);
 	
-	Task_Create_System(drive_robot, 0);
-	
 	// IR detections are kept in buffer for 60ms
 	// Running a scan every 50 ms guarantees we won't miss a hit
+	Task_Create_Periodic(bump_scan, 0, 12, 6, 500);
 	
-	Task_Create_Periodic(bump_scan,0,  12, 6, 500);
+	// This is a system task as the timing will be unpredictable
+	Task_Create_System(drive_robot, 0);	
 	
+	// This is a system task as it is triggered by the base station
 	Task_Create_System(check_sonar, 0);
-
 	
 	Task_Terminate();
 	return 0;
