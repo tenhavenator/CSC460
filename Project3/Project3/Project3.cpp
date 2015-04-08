@@ -32,9 +32,9 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define TEAM1_ID 67
+#define TEAM1_ID 65
 #define TEAM2_ID 66 
-#define TEAM3_ID 65
+#define TEAM3_ID 67
 #define TEAM4_ID 68
 
 #define DRIVE_FORWARDS_SPEED 300
@@ -54,7 +54,7 @@ SERVICE * sonar_time_slot;
 
 volatile int drive_state = DRIVE_FORWARDS;
 
-static uint8_t recv_addr[5] = {'B', 'O', 'T', '_', 'A'};
+static uint8_t recv_addr[5] = {'B', 'O', 'T', '_', 'C'};
 static uint8_t send_addr[5] = {'D', 'B', 'A', 'S', 'E'};
 	
 static uint8_t hit_flags[3] = {0,0,0};	
