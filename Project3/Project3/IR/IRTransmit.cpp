@@ -11,7 +11,7 @@
 #include <avr/interrupt.h>
 #include "../irobot/irobot.hpp"
 
-volatile uint8_t m_id_buffer[] = {0, 1,0,0,0, 1,1,1,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,1,1,0, 1,1,1,0, 0,0,0,0};
+volatile uint8_t m_id_buffer[] = {0, 1,0,0,0, 1,1,1,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,1,1,0, 1,0,0,0, 0,0,0,0};
 	
 volatile int m_bits_to_send = 0;
 volatile int m_burst = 0;
