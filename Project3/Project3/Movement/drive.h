@@ -9,7 +9,8 @@
 #ifndef DRIVE_H_
 #define DRIVE_H_
 
-#define TURN_90_DEGREES_MS 1770
+#define TURN_90_DEGREES_MS 885
+#define TURN_45_DEGREES_MS 442
 
 enum
 {

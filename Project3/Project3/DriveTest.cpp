@@ -3,7 +3,6 @@
  *
  * Checks the driving functionality (with all sensors but the IR)
  */ 
-
 #if 0
 
 #include "OS/os.h"
@@ -28,14 +27,16 @@ irobot m_robot(&Serial1, ROBOT_DD_PIN);
 SERVICE * drive_state_service;
 volatile int drive_state = DRIVE_FORWARDS;
 
-static uint8_t recv_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x63};
-static uint8_t send_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x63};
-
 void kill_robot() {
 	m_robot.send(irobot::op_safe_mode);
 	OS_Abort();
 }
 
+//  Needed for the program to compile
+extern "C" {
+	void radio_rxhandler(uint8_t pipenumber) {}
+};
+	
 void disable_drive_interrupt() {
 	// Disable the interrupt
 	TIMSK4 &= ~(1<<OCIE4A);
@@ -44,9 +45,6 @@ void disable_drive_interrupt() {
 void enable_drive_interrupt(int time_ms) {
 	
 	// Set length of time to perform command
-	//float time_float = float(time_ms);
-	//Serial.print(time_float, DEC);
-	
 	long int time_ticks = (long int)(time_ms * 15.625);
 	
 	// Set up timer to interrupt when command is done
@@ -55,7 +53,7 @@ void enable_drive_interrupt(int time_ms) {
 	TIMSK4 |= (1<<OCIE4A);
 }
 
-void bump_scan() {
+void sensor_scan() {
 	for(;;) {
 			
 		SensorData data = SensorPoll();
@@ -65,7 +63,6 @@ void bump_scan() {
 		}
 		
 		if ((data.bumper_right == 1)||(data.bumper_left == 1)||(convert(data.light_center_left) > 100)||(convert(data.light_center_right) > 100)) {
-			IRFire();
 			Service_Publish(drive_state_service, DRIVE_BACKWARDS);
 		}
 			 
@@ -181,20 +178,35 @@ void check_sonar() {
 	
 	for (;;) {
 		
+		int16_t data;
+		pinMode(11, OUTPUT);
+		digitalWrite(11, LOW);
+		
+		// For debugging purposes
+		
+		digitalWrite(11, HIGH);
+		
+		digitalWrite(4, HIGH);
+		
 		uint16_t range = SonarFire(100, SONAR_SIGNAL_PIN);
 		
-		// check if going forwards, if so, make it go forwards forever (extend timer)		
+		
+		// check if going forwards and detecting something, if so, make it go forwards forever (extend timer)
 		if ((range > 10)&&(range < 100)) {
 			IRFire();
 			if(drive_state == DRIVE_FORWARDS) {
 				TCNT4 = 0;
 			}
-		} else {
-			//digitalWrite(2, LOW);
 		}
 		
+		// check if something very close, if so, back up and turn around
+		// This prevents us from running into higher objects that the bumper can't detect
+		else if ((range > 0)&&(range < 10)) {
+			disable_drive_interrupt();
+			Service_Publish(drive_state_service, DRIVE_BACKWARDS);
+		}
 		
-		Task_Next();
+		digitalWrite(4, LOW);
 	}
 }
 
@@ -212,13 +224,12 @@ int r_main(void)
 	_delay_ms(25);
 	
 	Task_Create_System(drive_robot, 0);
-	Task_Create_Periodic(bump_scan, 0, 100, 40, 550);
+	Task_Create_Periodic(sensor_scan, 0, 100, 40, 550);
 	Task_Create_Periodic(check_sonar, 0, 100, 40, 500);
 
 	Task_Terminate();
 	return 0;
 }
-
 
 #endif
 
