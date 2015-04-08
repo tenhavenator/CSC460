@@ -52,9 +52,9 @@ void drive(int16_t velocity)
 void spin(bool cw)
 {
 	uint8_t send_bytes[4];
-	int16_t velocity = -100;
+	int16_t velocity = -200;
 	if (cw) {
-		velocity = 100;
+		velocity = 200;
 	}
 	
 	send_bytes[0] = (velocity >> 8) & 0xFF;

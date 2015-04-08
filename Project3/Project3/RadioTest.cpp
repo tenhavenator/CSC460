@@ -11,9 +11,8 @@
 #include "Radio/Packets/radio_packets.hpp"
 #include "OS/os.h"
 
-static uint8_t recv_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x64};
-static uint8_t send_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x46};
-
+static uint8_t recv_addr[5] = {0x42, 0x4F, 0x54, 0x5F, 0x43};
+static uint8_t send_addr[5] = {0x44, 0x42, 0x41, 0x53, 0x45};
 
 extern "C" {
 void radio_rxhandler(uint8_t pipenumber)
@@ -76,11 +75,11 @@ void radio_init_test() {
 void send(void) {
 	
 	for(;;) {
-		
+				
 		radio_packet_t packet;
-		
-		packet.type =  sonar_trigger_packet_type;	
-		packet.sonar_trigger.id = 67;
+		packet.type = shot_packet_type;
+		packet.shot.shooter_id = 67;
+		packet.shot.target_id = 66;
 			
 		Radio_Transmit(&packet, RADIO_RETURN_ON_TX);
 		
@@ -104,7 +103,7 @@ void receive(void) {
 int r_main(void) {
 	
 	
-	Serial.begin(9600);
+	//Serial.begin(9600);
 	radio_init_test();
 	
 	Task_Create_Periodic(send, 0, 200, 100, 500);
@@ -113,5 +112,6 @@ int r_main(void) {
 	return 0;
 }
 
-#endif
 
+
+#endif

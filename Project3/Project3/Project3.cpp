@@ -37,7 +37,11 @@
 #define TEAM3_ID 67
 #define TEAM4_ID 68
 
-#define IR_RESPAWN 5000
+#define DRIVE_FORWARDS_SPEED 300
+#define DRIVE_FORWARDS_TIME 1800
+#define DRIVE_BACKWARDS_TIME 650
+
+#define IR_RESPAWN 3000
 
 static uint16_t last_shot_by_team1;
 static uint16_t last_shot_by_team2;
@@ -50,8 +54,8 @@ SERVICE * sonar_time_slot;
 
 volatile int drive_state = DRIVE_FORWARDS;
 
-static uint8_t recv_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x46};
-static uint8_t send_addr[5] = {0x62, 0x6F, 0x74, 0x5F, 0x64};
+static uint8_t recv_addr[5] = {'B', 'O', 'T', '_', 'C'};
+static uint8_t send_addr[5] = {'D', 'B', 'A', 'S', 'E'};
 	
 static uint8_t hit_flags[3] = {0,0,0};	
 
@@ -59,6 +63,8 @@ static uint8_t hit_flags[3] = {0,0,0};
 extern "C" {	
 void radio_rxhandler(uint8_t pipenumber)
 {
+	
+	
 	 radio_packet_t rx_packet;
 	 RADIO_RX_STATUS rx_status = RADIO_RX_MORE_PACKETS;
 	 while(rx_status == RADIO_RX_MORE_PACKETS)
@@ -79,11 +85,11 @@ void radio_rxhandler(uint8_t pipenumber)
 					 for(i = 0; i < 3; i++) {
 						 
 						if(hit_flags[i] != 0) {
-							digitalWrite(3, HIGH);
+							
 							radio_packet_t packet;
 							packet.type = shot_packet_type;
 							packet.shot.shooter_id = hit_flags[i];
-							packet.shot.target_id = TEAM2_ID;
+							packet.shot.target_id = TEAM3_ID;
 							Radio_Transmit(&packet, RADIO_RETURN_ON_TX);
 							hit_flags[i] = 0;
 						 }
@@ -199,23 +205,30 @@ void drive_robot() {
 			break;
 			
 			case DRIVE_FORWARDS:
-			enable_drive_interrupt(4000);
-			drive(200);
+			enable_drive_interrupt(DRIVE_FORWARDS_TIME);
+			drive(DRIVE_FORWARDS_SPEED);
 			break;
 			
 			case DRIVE_BACKWARDS:
-			drive(-100);
-			enable_drive_interrupt(1000);
+			drive(-150);
+			enable_drive_interrupt(DRIVE_BACKWARDS_TIME);
 			break;
 			
 			case DRIVE_TURN_CW_90:
-			spin(true);
-			enable_drive_interrupt(TURN_90_DEGREES_MS);
+			{
+				spin(true);
+				int modifier = rand() % (TURN_45_DEGREES_MS);
+				enable_drive_interrupt(TURN_90_DEGREES_MS - modifier);
+			}
+			
 			break;
 			
 			case DRIVE_TURN_CCW_90:
-			spin(false);
-			enable_drive_interrupt(TURN_90_DEGREES_MS);
+			{
+				spin(false);
+				int modifier = rand() % (TURN_45_DEGREES_MS);
+				enable_drive_interrupt(TURN_90_DEGREES_MS - modifier);
+			}
 			break;
 			
 			case DRIVE_TURN_AROUND:
@@ -253,7 +266,7 @@ void drive_robot() {
 // Shoots the IR gun if anything is detected in front of the robot
 // Sends a shot packet to the base station if this robot is shot by another
 // (unless already shot by that robot in the last 5 seconds)
-void bump_scan() {
+void sensor_scan() {
 	for(;;) {
 			
 		// For logic analyzer debugging purposes
@@ -365,14 +378,15 @@ void radio_configure() {
 	digitalWrite(RADIO_POWER_PIN, HIGH);
 	delay(100);
 	
-	Radio_Init(104);
+	Radio_Init(102);
 	Radio_Configure_Rx(RADIO_PIPE_0, recv_addr , ENABLE);
-	Radio_Configure(RADIO_2MBPS, RADIO_HIGHEST_POWER);
+	Radio_Configure(RADIO_1MBPS, RADIO_HIGHEST_POWER);
 	Radio_Set_Tx_Addr(send_addr);
 }
 
 int r_main(void)
 {			
+	
 	// Initialize and configure hardware and libraries
 	m_robot.begin();
 	IRInit();
@@ -382,7 +396,7 @@ int r_main(void)
 	
 	// Set the robot mode
 	m_robot.send(irobot::op_full_mode);
-	
+
 	// Set up shot timers so we can be shot by anyone
 	uint8_t now = Now();
 	last_shot_by_team1 = now - IR_RESPAWN;
@@ -400,19 +414,17 @@ int r_main(void)
 	// So that the first drive command doesn't come in too fast
 	_delay_ms(25);
 	
-	// IR detections are kept in buffer for 60ms
-	// Running a scan every 50 ms guarantees we won't miss a hit
-	Task_Create_Periodic(bump_scan, 0, 12, 6, 500);
-	
 	// This is a system task as the timing will be unpredictable
 	Task_Create_System(drive_robot, 0);	
 	
 	// This is a system task as it is triggered by the base station
 	Task_Create_System(check_sonar, 0);
 	
+	// IR detections are kept in buffer for 60ms
+	// Running a scan every 50 ms guarantees we won't miss a hit
+	Task_Create_Periodic(sensor_scan, 0, 12, 6, 0);
+	
 	Task_Terminate();
 	return 0;
 }
-
-
 
